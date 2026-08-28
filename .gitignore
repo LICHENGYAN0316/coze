@@ -1,0 +1,30 @@
+# macOS / editors
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*token*
+*secret*
+cookies*.json
+credentials*.json
+
+# Logs, caches and temporary exports
+*.log
+logs/
+tmp/
+.cache/
+node_modules/
+__pycache__/
+*.pyc
+
+# Private raw captures must be reviewed and redacted before commit
+evidence/raw/
+media/raw/

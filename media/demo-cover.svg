@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">智选 Agent Coze MVP 封面</title>
+  <desc id="desc">面向面试作品集的 3C 数码智能导购工作流封面。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111B30"/>
+      <stop offset="1" stop-color="#1E2B47"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF7A45"/>
+      <stop offset="1" stop-color="#FFB16B"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#080D19" flood-opacity="0.30"/>
+    </filter>
+    <style>
+      text { font-family: "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif; }
+    </style>
+  </defs>
+  <rect width="1280" height="640" fill="url(#background)"/>
+  <circle cx="1130" cy="70" r="260" fill="#FF8B50" opacity="0.10"/>
+  <circle cx="1190" cy="560" r="240" fill="#7468E8" opacity="0.12"/>
+  <circle cx="68" cy="620" r="180" fill="#FFFFFF" opacity="0.025"/>
+
+  <!-- simple brand mark -->
+  <g transform="translate(70 68)">
+    <rect width="54" height="54" rx="16" fill="url(#accent)"/>
+    <circle cx="19" cy="27" r="5" fill="#FFFFFF"/>
+    <circle cx="35" cy="27" r="5" fill="#FFFFFF"/>
+    <path d="M 18 39 C 23 44, 31 44, 36 39" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 21 9 L 17 2 M 33 9 L 37 2" fill="none" stroke="#FFB16B" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <text x="144" y="103" font-size="25" font-weight="700" fill="#FFFFFF">智选 Agent</text>
+  <rect x="300" y="77" width="138" height="38" rx="19" fill="#2A3855" stroke="#45536D"/>
+  <text x="369" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#FFAE7B">COZE MVP</text>
+
+  <text x="70" y="208" font-size="18" font-weight="700" letter-spacing="3" fill="#FF9A62">3C / 数码智能导购工作流</text>
+  <text x="70" y="276" font-size="50" font-weight="750" fill="#FFFFFF">把模糊需求，变成</text>
+  <text x="70" y="340" font-size="50" font-weight="750" fill="#FFFFFF">可解释的 Top 3</text>
+  <text x="70" y="393" font-size="21" fill="#AEB9CC">需求理解 · 主动追问 · 硬过滤 · 规则排序 · 事实守卫 · 无结果兜底</text>
+
+  <g transform="translate(70 463)">
+    <rect width="200" height="62" rx="19" fill="#263651" stroke="#3D4C67"/>
+    <circle cx="30" cy="31" r="10" fill="#58B78B"/>
+    <path d="M 25 31 L 29 35 L 36 26" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="52" y="38" font-size="18" font-weight="650" fill="#FFFFFF">Top 3 推荐</text>
+
+    <rect x="216" width="200" height="62" rx="19" fill="#263651" stroke="#3D4C67"/>
+    <circle cx="246" cy="31" r="10" fill="#8578EC"/>
+    <text x="246" y="37" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">?</text>
+    <text x="268" y="38" font-size="18" font-weight="650" fill="#FFFFFF">缺失信息追问</text>
+
+    <rect x="432" width="200" height="62" rx="19" fill="#263651" stroke="#3D4C67"/>
+    <circle cx="462" cy="31" r="10" fill="#DF6D69"/>
+    <path d="M 457 31 H 467" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    <text x="484" y="38" font-size="18" font-weight="650" fill="#FFFFFF">无结果兜底</text>
+  </g>
+
+  <!-- product/result stack -->
+  <g transform="translate(870 168)" filter="url(#shadow)">
+    <rect x="34" y="58" width="304" height="256" rx="26" fill="#2B3852" opacity="0.65" transform="rotate(6 186 186)"/>
+    <rect x="16" y="30" width="320" height="270" rx="26" fill="#FFFFFF" opacity="0.96" transform="rotate(2 176 165)"/>
+    <rect width="332" height="286" rx="28" fill="#FFFFFF"/>
+    <rect x="24" y="22" width="76" height="28" rx="14" fill="#FFF0E9"/>
+    <text x="62" y="41" text-anchor="middle" font-size="13" font-weight="700" fill="#F06D3B">TOP 1</text>
+    <text x="24" y="91" font-size="24" font-weight="750" fill="#17233A">星澜 Air 14</text>
+    <text x="24" y="122" font-size="16" fill="#6C788C">轻薄 · 编程 · 出差 · 续航</text>
+    <text x="24" y="171" font-size="38" font-weight="750" fill="#17233A">89.98</text>
+    <text x="132" y="168" font-size="14" font-weight="700" fill="#7C879A">综合分</text>
+    <rect x="24" y="196" width="284" height="9" rx="4.5" fill="#E8ECF2"/>
+    <rect x="24" y="196" width="255" height="9" rx="4.5" fill="url(#accent)"/>
+    <line x1="24" y1="232" x2="308" y2="232" stroke="#E4E8EF"/>
+    <text x="24" y="264" font-size="15" fill="#55637A">¥6,999</text>
+    <text x="308" y="264" text-anchor="end" font-size="15" font-weight="700" fill="#2D8A67">预算余量 ¥1,001</text>
+  </g>
+
+  <text x="70" y="594" font-size="15" fill="#738099">15 条完全合成商品 · rule_v1 · GitHub 免登录查看</text>
+</svg>
