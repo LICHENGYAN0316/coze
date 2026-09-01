@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
   <title id="title">智选 Agent Coze MVP 封面</title>
-  <desc id="desc">面向日化历史商品样本的需求理解、证据筛选与可解释推荐工作流封面。</desc>
+  <desc id="desc">面向面试作品集的 3C 数码智能导购工作流封面。</desc>
   <defs>
     <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#111B30"/>
@@ -34,10 +34,10 @@
   <rect x="300" y="77" width="138" height="38" rx="19" fill="#2A3855" stroke="#45536D"/>
   <text x="369" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#FFAE7B">COZE MVP</text>
 
-  <text x="70" y="208" font-size="18" font-weight="700" letter-spacing="3" fill="#FF9A62">日化历史数据 / 证据守卫工作流</text>
+  <text x="70" y="208" font-size="18" font-weight="700" letter-spacing="3" fill="#FF9A62">3C / 数码智能导购工作流</text>
   <text x="70" y="276" font-size="50" font-weight="750" fill="#FFFFFF">把模糊需求，变成</text>
   <text x="70" y="340" font-size="50" font-weight="750" fill="#FFFFFF">可解释的 Top 3</text>
-  <text x="70" y="393" font-size="21" fill="#AEB9CC">豆包抽取 · 敏感肌 · 成分避雷 · 事实守卫</text>
+  <text x="70" y="393" font-size="21" fill="#AEB9CC">需求理解 · 主动追问 · 硬过滤 · 规则排序 · 事实守卫 · 无结果兜底</text>
 
   <g transform="translate(70 463)">
     <rect width="200" height="62" rx="19" fill="#263651" stroke="#3D4C67"/>
@@ -56,19 +56,23 @@
     <text x="484" y="38" font-size="18" font-weight="650" fill="#FFFFFF">无结果兜底</text>
   </g>
 
-  <!-- product/result card -->
-  <rect x="870" y="168" width="332" height="286" rx="28" fill="#FFFFFF"/>
-  <rect x="894" y="190" width="76" height="28" rx="14" fill="#FFF0E9"/>
-  <text x="932" y="209" text-anchor="middle" font-size="13" font-weight="700" fill="#F06D3B">TOP 1</text>
-  <text x="894" y="259" font-size="22" font-weight="750" fill="#17233A">雅漾活泉水喷雾 300ml</text>
-  <text x="894" y="290" font-size="16" fill="#6C788C">补水 · 通勤 · 敏感肌证据</text>
-  <text x="894" y="339" font-size="38" font-weight="750" fill="#17233A">98.60</text>
-  <text x="1002" y="336" font-size="14" font-weight="700" fill="#7C879A">综合分</text>
-  <rect x="894" y="364" width="284" height="9" rx="4.5" fill="#E8ECF2"/>
-  <rect x="894" y="364" width="255" height="9" rx="4.5" fill="url(#accent)"/>
-  <line x1="894" y1="400" x2="1178" y2="400" stroke="#E4E8EF"/>
-  <text x="894" y="432" font-size="15" fill="#55637A">样本价 ¥186</text>
-  <text x="1178" y="432" text-anchor="end" font-size="15" font-weight="700" fill="#2D8A67">与预算上限相差 ¥14</text>
+  <!-- product/result stack -->
+  <g transform="translate(870 168)" filter="url(#shadow)">
+    <rect x="34" y="58" width="304" height="256" rx="26" fill="#2B3852" opacity="0.65" transform="rotate(6 186 186)"/>
+    <rect x="16" y="30" width="320" height="270" rx="26" fill="#FFFFFF" opacity="0.96" transform="rotate(2 176 165)"/>
+    <rect width="332" height="286" rx="28" fill="#FFFFFF"/>
+    <rect x="24" y="22" width="76" height="28" rx="14" fill="#FFF0E9"/>
+    <text x="62" y="41" text-anchor="middle" font-size="13" font-weight="700" fill="#F06D3B">TOP 1</text>
+    <text x="24" y="91" font-size="24" font-weight="750" fill="#17233A">星澜 Air 14</text>
+    <text x="24" y="122" font-size="16" fill="#6C788C">轻薄 · 编程 · 出差 · 续航</text>
+    <text x="24" y="171" font-size="38" font-weight="750" fill="#17233A">89.98</text>
+    <text x="132" y="168" font-size="14" font-weight="700" fill="#7C879A">综合分</text>
+    <rect x="24" y="196" width="284" height="9" rx="4.5" fill="#E8ECF2"/>
+    <rect x="24" y="196" width="255" height="9" rx="4.5" fill="url(#accent)"/>
+    <line x1="24" y1="232" x2="308" y2="232" stroke="#E4E8EF"/>
+    <text x="24" y="264" font-size="15" fill="#55637A">¥6,999</text>
+    <text x="308" y="264" text-anchor="end" font-size="15" font-weight="700" fill="#2D8A67">预算余量 ¥1,001</text>
+  </g>
 
-  <text x="70" y="594" font-size="15" fill="#738099">15 条日化历史商品样本 · daily_rule_v1 · GitHub 可复算</text>
+  <text x="70" y="594" font-size="15" fill="#738099">15 条完全合成商品 · rule_v1 · GitHub 免登录查看</text>
 </svg>

@@ -1,71 +1,134 @@
 {
-  "schema_version": "2.0.0",
+  "schema_version": "1.1.0",
   "export_type": "equivalent_reference_config",
   "native_export": false,
   "direct_import_supported": false,
-  "status": "local_verified_pending_coze_native_update",
-  "disclaimer_zh": "此文件是 Coze 节点等价参考配置，不是平台原生导出。日化迁移已完成本地复算，尚未冒充为 Coze 平台原生运行。",
+  "status": "platform_verified_equivalent_public_config",
+  "disclaimer_zh": "此文件是依据已验收工作流整理的 Coze 节点等价参考配置，不是从 Coze 平台导出的原生文件，也不支持直接导入。真实项目 ID、版本与 A-D 原生运行证据已记录；当前 Coze Coding 项目视图未提供单文件原生导出入口。",
   "project": {
-    "name": "智选 Agent｜日化历史数据 Coze MVP",
+    "name": "智选 Agent｜Coze MVP",
     "platform": "Coze（扣子）",
     "language": "zh-CN",
-    "publication_status": "未部署",
+    "publication_status": "未发布",
     "platform_project_id": "7679015075092578350",
     "platform_project_url": "https://code.coze.cn/p/7679015075092578350/preview",
-    "interaction_contract": "保留 Start→需求抽取→归一化→必填判断→单问题追问/检索→排序→理由→事实校验→统一输出的原有交互结构",
-    "implementation_status": "日化等价配置与离线验证已完成；Coze 画布、Secret 和原生运行待在平台内同步"
+    "implementation_status": "已在 Coze 平台搭建；v0.2.0 A-D 4/4 原生试运行通过；v0.2.1 仅商品名称合规修正；保持未部署"
   },
-  "doubao": {
-    "provider": "火山方舟豆包",
-    "purpose": "只抽取需求字段，不生成商品事实或价格",
-    "secret_ref": "ARK_API_KEY",
-    "model_ref": "ARK_MODEL",
-    "base_url_ref": "ARK_BASE_URL",
-    "default_model": "doubao-seed-2-0-lite-260215",
-    "credential_policy": "真实密钥只放在 Coze Secret 或部署环境变量，不进入代码、日志、输出或 Git 历史。",
-    "integration_state": "configuration_ready_secret_not_provisioned"
+  "platform_verification": {
+    "native_run_version": "v0.2.0",
+    "current_project_version": "v0.2.1",
+    "publication_status": "未部署",
+    "cases_passed": 4,
+    "cases_total": 4,
+    "statuses_covered": ["recommend", "need_clarification", "no_result"],
+    "evidence_index": "../evidence/README.md",
+    "native_single_file_export_available": false,
+    "v0_2_1_change_scope": "仅修改 15 个商品 name 字段；其余数据、代码、路由和分数零改动",
+    "v0_2_1_static_name_audit": "passed",
+    "v0_2_1_native_rerun": "not_completed_due_to_platform_resource_quota",
+    "verified_at": "2026-08-29"
   },
   "assets": {
-    "catalog_path": "../data/products.json",
-    "catalog_version": "2.0.0",
-    "catalog_historical": true,
-    "price_field": "sample_price",
-    "price_label": "样本价",
-    "categories": ["补水喷雾", "保湿乳霜", "清洁定妆"],
-    "rule_version": "daily_rule_v1",
-    "evidence_policy": "敏感肌或成分避雷需求必须通过 official_current_reference 证据门槛。"
+    "catalog": "../data/products.json",
+    "catalog_version": "1.0.0",
+    "catalog_synthetic": true,
+    "rule_version": "rule_v1"
   },
   "input_schema": {
     "type": "object",
     "required": ["query"],
-    "properties": {"query": {"type": "string", "minLength": 1}}
+    "properties": {
+      "query": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500,
+        "description": "用户最新一轮中文自然语言需求"
+      }
+    },
+    "additionalProperties": false
   },
   "output_schema": {
     "type": "object",
-    "required": ["status", "parsed", "missing_fields", "question", "recommendations", "fallback", "trace"],
+    "required": [
+      "status",
+      "parsed",
+      "missing_fields",
+      "question",
+      "recommendations",
+      "fallback",
+      "trace"
+    ],
     "properties": {
-      "status": {"enum": ["need_clarification", "recommend", "no_result"]},
+      "status": {
+        "enum": ["recommend", "need_clarification", "no_result"]
+      },
       "parsed": {
         "type": "object",
-        "required": ["category", "budget", "use_case", "priority", "skin_type", "avoid_ingredients", "requires_verified_evidence"],
-        "properties": {
-          "category": {"type": ["string", "null"]},
-          "budget": {"type": ["number", "null"], "exclusiveMinimum": 0},
-          "use_case": {"type": "array", "items": {"type": "string"}},
-          "priority": {"type": "array", "items": {"type": "string"}},
-          "skin_type": {"type": ["string", "null"]},
-          "avoid_ingredients": {"type": "array", "items": {"type": "string"}},
-          "requires_verified_evidence": {"type": "boolean"}
+        "required": ["category", "budget", "use_case", "priority"]
+      },
+      "missing_fields": {
+        "type": "array",
+        "items": {
+          "enum": ["category", "budget", "use_case"]
         }
       },
-      "missing_fields": {"type": "array", "items": {"type": "string"}},
-      "question": {"type": ["string", "null"]},
-      "recommendations": {"type": "array"},
-      "fallback": {"type": ["object", "null"]},
-      "trace": {"type": "object"}
+      "question": {
+        "type": ["string", "null"]
+      },
+      "recommendations": {
+        "type": "array",
+        "maxItems": 3
+      },
+      "fallback": {
+        "type": ["object", "null"]
+      },
+      "trace": {
+        "type": "object",
+        "required": [
+          "rule_version",
+          "catalog_version",
+          "retrieval_executed",
+          "eligible_count",
+          "returned_count",
+          "excluded_by_category",
+          "excluded_by_budget",
+          "excluded_by_stock",
+          "same_category_total_count",
+          "same_category_in_stock_count",
+          "clarified_field",
+          "source_nodes"
+        ]
+      }
     }
   },
+  "normalization": {
+    "category_aliases": {
+      "笔记本": "笔记本电脑",
+      "电脑": "笔记本电脑",
+      "轻薄本": "笔记本电脑",
+      "游戏本": "笔记本电脑",
+      "手机": "智能手机",
+      "智能机": "智能手机",
+      "拍照手机": "智能手机",
+      "耳机": "头戴耳机",
+      "头戴式": "头戴耳机",
+      "降噪耳机": "头戴耳机"
+    },
+    "token_aliases": {
+      "开发": "编程",
+      "差旅": "出差",
+      "旅行携带": "出差",
+      "摄影": "拍照",
+      "电池": "续航",
+      "待机": "续航",
+      "便携": "轻薄",
+      "ANC": "降噪",
+      "重度计算": "高性能"
+    },
+    "missing_field_priority": ["category", "budget", "use_case"]
+  },
   "graph": {
+    "entry": "start",
     "nodes": [
       {
         "id": "start",
@@ -73,138 +136,338 @@
         "coze_node_type": "start",
         "inputs": ["query"],
         "outputs": ["query"],
-        "config": {"trim_input": true, "reject_empty": true}
+        "config": {
+          "trim": true,
+          "reject_empty": true
+        }
       },
       {
         "id": "intent_extract",
         "name": "IntentExtract",
-        "coze_node_type": "llm_or_http",
+        "coze_node_type": "llm",
         "inputs": ["start.query"],
         "outputs": ["raw_intent"],
         "config": {
-          "provider": "火山方舟豆包",
-          "credential": {"type": "secret_ref", "name": "ARK_API_KEY"},
-          "model": {"type": "environment_ref", "name": "ARK_MODEL", "default": "doubao-seed-2-0-lite-260215"},
-          "base_url": {"type": "environment_ref", "name": "ARK_BASE_URL", "default": "https://ark.cn-beijing.volces.com/api/v3"},
-          "response_mode": "strict_json",
-          "system_prompt": "你是日化导购需求抽取器。只抽取用户显式表达的品类、预算、功效、肤质和需避开成分，不猜测配方、安全性、商品事实或价格。只输出固定 JSON 字段。"
+          "temperature": 0,
+          "response_format": "json_object",
+          "system_prompt": "你是 3C 导购需求抽取器。仅抽取用户显式表达或可由给定同义词确定的信息，不得猜测预算、品牌、规格或使用场景。只输出 JSON，字段固定为 category、budget、use_case、priority。category 只能是笔记本电脑、智能手机、头戴耳机或 null；budget 是人民币预算上限正数或 null；use_case 和 priority 是字符串数组。",
+          "user_prompt_template": "用户需求：{{start.query}}"
         }
       },
       {
         "id": "normalize_fields",
         "name": "NormalizeFields",
         "coze_node_type": "code",
-        "inputs": ["intent_extract.raw_intent"],
-        "outputs": ["parsed"],
+        "inputs": ["intent_extract.raw_intent", "start.query"],
+        "outputs": ["parsed", "demand_tokens", "missing_fields"],
         "config": {
-          "category_aliases": {
-            "喷雾": "补水喷雾", "化妆水喷雾": "补水喷雾", "补水喷雾": "补水喷雾",
-            "乳液": "保湿乳霜", "面霜": "保湿乳霜", "保湿乳霜": "保湿乳霜",
-            "洁面": "清洁定妆", "卸妆": "清洁定妆", "散粉": "清洁定妆", "定妆": "清洁定妆"
-          },
-          "avoid_aliases": {"香精/香料": "香精", "paraben/防腐酯": "对羟基苯甲酸酯", "酒精/乙醇": "酒精", "矿物油": "矿物油", "SLS": "SLS", "SLES": "SLES"},
-          "rules": ["预算只接受正数上限", "敏感肌或成分避雷使 requires_verified_evidence=true", "未显式表达的字段保持 null 或空数组"]
+          "runtime": "javascript",
+          "logic": [
+            "用 category_aliases 统一品类",
+            "解析预算表达，k 乘以 1000，预算转为正整数",
+            "用 token_aliases 统一 use_case 与 priority 并去重",
+            "将高性能需求归入 use_case=高性能，同时可保留 priority=性能",
+            "按 category、budget、use_case 计算全部缺失字段",
+            "demand_tokens = unique(use_case + priority)"
+          ]
         }
       },
       {
         "id": "required_fields",
         "name": "RequiredFields",
         "coze_node_type": "condition",
-        "inputs": ["normalize_fields.parsed"],
-        "outputs": ["complete", "missing_fields"],
-        "config": {"required": ["category", "budget", "use_case"], "priority_order": ["category", "budget", "use_case"]}
+        "inputs": ["normalize_fields.missing_fields"],
+        "outputs": ["is_complete"],
+        "branches": {
+          "complete": "length(missing_fields) == 0",
+          "incomplete": "length(missing_fields) > 0"
+        }
       },
       {
         "id": "clarify_one_field",
         "name": "ClarifyOneField",
-        "coze_node_type": "code",
-        "inputs": ["required_fields.missing_fields", "normalize_fields.parsed"],
+        "coze_node_type": "text",
+        "inputs": ["normalize_fields.parsed", "normalize_fields.missing_fields"],
         "outputs": ["question", "clarified_field"],
-        "config": {"one_question_only": true, "question_templates": {"category": "你想找补水喷雾、保湿乳霜，还是清洁定妆产品？", "budget": "你的样本价预算上限是多少？", "use_case": "你最在意补水、保湿、控油还是清洁？"}}
+        "config": {
+          "one_question_only": true,
+          "templates": {
+            "category": "你主要想买哪一类产品：笔记本电脑、智能手机，还是头戴耳机？",
+            "budget": "你的预算上限大约是多少？例如 1000 元、2000 元或 5000 元。",
+            "use_case": "你主要会在什么场景使用？例如通勤、出差、编程、拍照或游戏。"
+          },
+          "status": "need_clarification"
+        }
       },
       {
         "id": "retrieve_catalog",
         "name": "RetrieveCatalog",
         "coze_node_type": "code",
         "inputs": ["normalize_fields.parsed", "assets.catalog"],
-        "outputs": ["eligible", "excluded_by_category", "excluded_by_budget", "excluded_by_evidence", "same_category_total_count"],
+        "outputs": [
+          "eligible_products",
+          "eligible_count",
+          "excluded_by_category",
+          "excluded_by_budget",
+          "excluded_by_stock",
+          "same_category_products",
+          "same_category_total_count",
+          "same_category_in_stock_count"
+        ],
         "config": {
-          "hard_filters": ["category == parsed.category", "sample_price <= parsed.budget", "敏感肌时 official_current_reference 且 sensitive_skin_claim=true", "成分避雷时每一项都必须出现在官方 formulated_without"],
-          "null_policy": "历史销量或评论缺失时保持 null，排序归一化时按 0 处理，不伪造观测值"
+          "runtime": "javascript",
+          "hard_filters": [
+            "product.category === parsed.category",
+            "product.price <= parsed.budget",
+            "product.stock > 0"
+          ],
+          "audit_logic": [
+            "same_category_products = catalog.filter(product.category === parsed.category)",
+            "excluded_by_category = catalog.filter(product.category !== parsed.category).map(id)",
+            "excluded_by_budget = same_category_products.filter(product.price > parsed.budget).map(id)",
+            "excluded_by_stock = same_category_products.filter(product.price <= parsed.budget && product.stock <= 0).map(id)",
+            "eligible_products = same_category_products.filter(product.price <= parsed.budget && product.stock > 0)",
+            "same_category_total_count = same_category_products.length",
+            "same_category_in_stock_count = same_category_products.filter(product.stock > 0).length"
+          ]
         }
       },
       {
         "id": "has_candidates",
         "name": "HasCandidates",
         "coze_node_type": "condition",
-        "inputs": ["retrieve_catalog.eligible"],
-        "outputs": ["yes", "no"],
-        "config": {"condition": "len(eligible) > 0"}
+        "inputs": ["retrieve_catalog.eligible_count"],
+        "outputs": ["has_candidates"],
+        "branches": {
+          "yes": "eligible_count > 0",
+          "no": "eligible_count == 0"
+        }
       },
       {
         "id": "rule_rank_v1",
-        "name": "RuleRankDailyV1",
+        "name": "RuleRankV1",
         "coze_node_type": "code",
-        "inputs": ["retrieve_catalog.eligible", "normalize_fields.parsed"],
-        "outputs": ["ranked_top3"],
+        "inputs": [
+          "retrieve_catalog.eligible_products",
+          "normalize_fields.demand_tokens",
+          "normalize_fields.parsed.budget"
+        ],
+        "outputs": ["ranked_products", "top3"],
         "config": {
-          "formula": "0.40*need_match + 0.20*budget_match + 0.15*historical_sales_normalized + 0.10*historical_comments_normalized + 0.15*evidence_quality",
-          "score_range": [0, 100],
-          "stable_sort": ["score desc", "historical_sales_count desc", "sample_price asc", "id asc"],
-          "top_k": 3
+          "runtime": "javascript",
+          "component_scale": "0_to_100",
+          "components": {
+            "need_match": "matched_demand_tokens / demand_tokens.length * 100",
+            "budget_match": "product.price / budget * 100",
+            "rating_normalized": "clip(product.rating - 4.0, 0, 1) * 100",
+            "sales_normalized": "product.sales / max(eligible_products.sales) * 100",
+            "stock_availability": "min(product.stock / 20, 1) * 100"
+          },
+          "formula": "0.35*need_match + 0.25*budget_match + 0.20*rating_normalized + 0.10*sales_normalized + 0.10*stock_availability",
+          "tie_breakers": [
+            "score desc",
+            "rating desc",
+            "price asc",
+            "id asc"
+          ],
+          "limit": 3,
+          "round_output_decimals": 2
         }
       },
       {
         "id": "reason_generate",
         "name": "ReasonGenerate",
         "coze_node_type": "llm",
-        "inputs": ["rule_rank_v1.ranked_top3", "normalize_fields.parsed"],
+        "inputs": ["normalize_fields.parsed", "rule_rank_v1.top3"],
         "outputs": ["draft_reasons"],
-        "config": {"model": "同 IntentExtract 的 ARK_MODEL Secret 配置", "prompt_guardrails": ["只改写输入字段", "不生成库外商品", "不把样本价写成电商平台报价", "不把商家标题功效词升级为官方证据", "不对过敏或医疗结果作保证"]}
+        "config": {
+          "temperature": 0.2,
+          "response_format": "json_array",
+          "system_prompt": "你是推荐理由生成器。每项只能引用输入商品的 use_cases、features、highlights 和 limitations，不得补充库外规格、优惠、库存承诺或竞品结论。每项必须包含 why_fit、budget_relation、tradeoff。budget_relation 只描述预算余量，不得称作优惠；tradeoff 必须来自 limitations。"
+        }
       },
       {
         "id": "fact_guard",
         "name": "FactGuard",
         "coze_node_type": "code",
-        "inputs": ["rule_rank_v1.ranked_top3", "reason_generate.draft_reasons", "assets.catalog"],
+        "inputs": [
+          "normalize_fields.parsed.budget",
+          "rule_rank_v1.top3",
+          "reason_generate.draft_reasons"
+        ],
         "outputs": ["recommendations"],
-        "config": {"checks": ["id/shop/name/sample_price 必须与商品库一致", "budget_gap == budget - sample_price", "敏感肌与避雷断言必须有官方来源", "tradeoff 必须来自 limitations"], "on_failure": "丢弃不通过项并返回证据不足说明"}
+        "config": {
+          "runtime": "javascript",
+          "checks": [
+            "推荐 ID 必须属于本次 top3",
+            "名称、价格、库存与各分项得分由代码结果覆盖",
+            "budget_gap = budget - price 重新计算",
+            "tradeoff 必须能映射到 product.limitations",
+            "校验失败时使用确定性模板理由"
+          ]
+        }
       },
       {
         "id": "no_result_fallback",
         "name": "NoResultFallback",
         "coze_node_type": "code",
-        "inputs": ["retrieve_catalog", "normalize_fields.parsed"],
-        "outputs": ["fallback"],
-        "config": {"logic": ["有同品类预算内商品但均未通过证据门槛时返回 insufficient_verified_evidence", "预算低于同品类最低样本价时返回 budget_below_sample_floor", "品类未覆盖时返回 category_not_covered"]}
+        "inputs": [
+          "normalize_fields.parsed",
+          "retrieve_catalog.same_category_products",
+          "retrieve_catalog.same_category_total_count",
+          "retrieve_catalog.same_category_in_stock_count"
+        ],
+        "outputs": ["fallback", "fallback_type"],
+        "config": {
+          "runtime": "javascript",
+          "logic": [
+            "若 same_category_total_count == 0，返回 fallback_type=category_unavailable，并建议更换品类",
+            "若 same_category_total_count > 0 且 same_category_in_stock_count == 0，返回 fallback_type=no_stock；available_price_floor 与 required_budget_increase 均为 null，并建议稍后再查或更换品类",
+            "否则从同品类且 stock > 0 的商品计算 available_price_floor",
+            "若预算低于 available_price_floor，返回 fallback_type=budget_below_floor 与 required_budget_increase",
+            "若仍无候选，返回 fallback_type=no_candidate_after_filters，并建议放宽一个优先项",
+            "不得返回商品库之外的具体商品"
+          ],
+          "status": "no_result"
+        }
       },
       {
         "id": "build_response",
         "name": "BuildResponse",
         "coze_node_type": "code",
-        "inputs": ["normalize_fields.parsed", "required_fields", "clarify_one_field", "fact_guard", "no_result_fallback", "retrieve_catalog"],
-        "outputs": ["status", "parsed", "missing_fields", "question", "recommendations", "fallback", "trace"],
+        "input_mode": "first_completed_branch",
+        "inputs": [
+          "normalize_fields.parsed",
+          "normalize_fields.missing_fields",
+          "clarify_one_field.question?",
+          "clarify_one_field.clarified_field?",
+          "retrieve_catalog.eligible_count?",
+          "retrieve_catalog.excluded_by_category?",
+          "retrieve_catalog.excluded_by_budget?",
+          "retrieve_catalog.excluded_by_stock?",
+          "retrieve_catalog.same_category_total_count?",
+          "retrieve_catalog.same_category_in_stock_count?",
+          "fact_guard.recommendations?",
+          "no_result_fallback.fallback?"
+        ],
+        "outputs": [
+          "status",
+          "parsed",
+          "missing_fields",
+          "question",
+          "recommendations",
+          "fallback",
+          "trace",
+          "response"
+        ],
         "config": {
-          "branch_mappings": {
-            "need_clarification": {"status": "need_clarification", "parsed": "normalize_fields.parsed", "missing_fields": "required_fields.missing_fields", "question": "clarify_one_field.question", "recommendations": [], "fallback": null, "trace": "trace_mapping"},
-            "recommend": {"status": "recommend", "parsed": "normalize_fields.parsed", "missing_fields": [], "question": null, "recommendations": "fact_guard.recommendations", "fallback": null, "trace": "trace_mapping"},
-            "no_result": {"status": "no_result", "parsed": "normalize_fields.parsed", "missing_fields": [], "question": null, "recommendations": [], "fallback": "no_result_fallback.fallback", "trace": "trace_mapping"}
+          "runtime": "javascript",
+          "branch_detection": {
+            "need_clarification": "clarify_one_field.question is defined",
+            "recommend": "fact_guard.recommendations is defined and length > 0",
+            "no_result": "no_result_fallback.fallback is defined"
           },
-          "trace_mapping": {
-            "source_nodes": {
-              "rule_version": "assets", "catalog_version": "assets", "retrieval_executed": "build_response", "eligible_count": "retrieve_catalog", "returned_count": "build_response", "excluded_by_category": "retrieve_catalog", "excluded_by_budget": "retrieve_catalog", "excluded_by_evidence": "retrieve_catalog", "same_category_total_count": "retrieve_catalog", "clarified_field": "clarify_one_field"
+          "defaults": {
+            "question": null,
+            "recommendations": [],
+            "fallback": null,
+            "eligible_count": 0,
+            "returned_count": 0,
+            "excluded_by_category": [],
+            "excluded_by_budget": [],
+            "excluded_by_stock": [],
+            "same_category_total_count": 0,
+            "same_category_in_stock_count": 0,
+            "clarified_field": null
+          },
+          "branch_mappings": {
+            "need_clarification": {
+              "status": "need_clarification",
+              "parsed": "normalize_fields.parsed",
+              "missing_fields": "normalize_fields.missing_fields",
+              "question": "clarify_one_field.question",
+              "recommendations": [],
+              "fallback": null,
+              "trace": "BuildResponse.trace_mapping 结合默认值生成",
+              "retrieval_executed": false,
+              "clarified_field": "clarify_one_field.clarified_field"
+            },
+            "recommend": {
+              "status": "recommend",
+              "parsed": "normalize_fields.parsed",
+              "missing_fields": [],
+              "question": null,
+              "recommendations": "fact_guard.recommendations",
+              "fallback": null,
+              "trace": "BuildResponse.trace_mapping 结合 RetrieveCatalog 输出生成",
+              "retrieval_executed": true
+            },
+            "no_result": {
+              "status": "no_result",
+              "parsed": "normalize_fields.parsed",
+              "missing_fields": [],
+              "question": null,
+              "recommendations": [],
+              "fallback": "no_result_fallback.fallback",
+              "trace": "BuildResponse.trace_mapping 结合 RetrieveCatalog 输出生成",
+              "retrieval_executed": true
             }
           },
-          "invariant": "三种分支始终返回七个统一顶层字段"
+          "trace_mapping": {
+            "rule_version": "assets.rule_version",
+            "catalog_version": "assets.catalog_version",
+            "retrieval_executed": "BuildResponse 根据实际命中分支写入",
+            "eligible_count": "retrieve_catalog.eligible_count；未执行检索时取默认值 0",
+            "returned_count": "BuildResponse 对 recommendations.length 计数",
+            "excluded_by_category": "retrieve_catalog.excluded_by_category；未执行检索时取 []",
+            "excluded_by_budget": "retrieve_catalog.excluded_by_budget；未执行检索时取 []",
+            "excluded_by_stock": "retrieve_catalog.excluded_by_stock；未执行检索时取 []",
+            "same_category_total_count": "retrieve_catalog.same_category_total_count；未执行检索时取 0",
+            "same_category_in_stock_count": "retrieve_catalog.same_category_in_stock_count；未执行检索时取 0",
+            "clarified_field": "clarify_one_field.clarified_field；非追问分支取 null",
+            "source_nodes": {
+              "rule_version": "assets",
+              "catalog_version": "assets",
+              "retrieval_executed": "build_response",
+              "eligible_count": "retrieve_catalog",
+              "returned_count": "build_response",
+              "excluded_by_category": "retrieve_catalog",
+              "excluded_by_budget": "retrieve_catalog",
+              "excluded_by_stock": "retrieve_catalog",
+              "same_category_total_count": "retrieve_catalog",
+              "same_category_in_stock_count": "retrieve_catalog",
+              "clarified_field": "clarify_one_field"
+            }
+          },
+          "invariant": "无论命中哪个分支，response 都必须包含 output_schema 要求的全部七个顶层字段"
         }
       },
       {
         "id": "end",
         "name": "End",
         "coze_node_type": "end",
-        "inputs": ["build_response"],
-        "outputs": ["status", "parsed", "missing_fields", "question", "recommendations", "fallback", "trace"],
-        "config": {"field_mapping": {"status": "build_response.status", "parsed": "build_response.parsed", "missing_fields": "build_response.missing_fields", "question": "build_response.question", "recommendations": "build_response.recommendations", "fallback": "build_response.fallback", "trace": "build_response.trace"}}
+        "inputs": ["build_response.response"],
+        "outputs": [
+          "status",
+          "parsed",
+          "missing_fields",
+          "question",
+          "recommendations",
+          "fallback",
+          "trace"
+        ],
+        "config": {
+          "contract": "output_schema",
+          "field_mapping": {
+            "status": "build_response.status",
+            "parsed": "build_response.parsed",
+            "missing_fields": "build_response.missing_fields",
+            "question": "build_response.question",
+            "recommendations": "build_response.recommendations",
+            "fallback": "build_response.fallback",
+            "trace": "build_response.trace"
+          }
+        }
       }
     ],
     "edges": [
@@ -229,7 +492,6 @@
     "local_test_report": "../examples/test-report.md",
     "coze_native_run_verified": false,
     "coze_native_export_attached": false,
-    "evidence_attached": false,
-    "reason": "当前会话只修改 GitHub 子项目，未获授权登录 Coze 平台改画布、配置 Secret 或执行原生调用。"
+    "evidence_attached": false
   }
 }

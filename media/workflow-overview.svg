@@ -44,9 +44,9 @@
   <circle cx="1730" cy="50" r="210" fill="#FF8A55" opacity="0.06"/>
   <circle cx="80" cy="760" r="220" fill="#7468E8" opacity="0.05"/>
 
-  <text class="eyebrow" x="72" y="70">COZE MVP · DAILY_RULE_V1</text>
-  <text class="title" x="72" y="122">从日化需求到可解释推荐的核心闭环</text>
-  <text class="subtitle" x="72" y="158">15 条日化历史商品样本 · 敏感肌与成分证据门槛 · 三种互斥输出状态</text>
+  <text class="eyebrow" x="72" y="70">COZE MVP · RULE_V1</text>
+  <text class="title" x="72" y="122">从模糊需求到可解释推荐的核心闭环</text>
+  <text class="subtitle" x="72" y="158">3C / 数码智能导购 · 15 条完全合成商品数据 · 三种互斥输出状态</text>
 
   <!-- main flow -->
   <g filter="url(#shadow)">
@@ -60,7 +60,7 @@
     <circle cx="337" cy="259" r="16" fill="url(#brand)"/>
     <text class="step" x="337" y="264" text-anchor="middle">02</text>
     <text class="node-title" x="330" y="300">参数提取</text>
-    <text class="node-copy" x="330" y="328">品类 · 预算 · 功效 · 肤质/成分</text>
+    <text class="node-copy" x="330" y="328">品类 · 预算 · 场景 · 优先项</text>
 
     <path d="M 642 222 L 724 289 L 642 356 L 560 289 Z" fill="#FFF8F2" stroke="#F3A070" stroke-width="2"/>
     <text class="node-title" x="642" y="282" text-anchor="middle">信息</text>
@@ -70,7 +70,7 @@
     <circle cx="797" cy="259" r="16" fill="url(#brand)"/>
     <text class="step" x="797" y="264" text-anchor="middle">03</text>
     <text class="node-title" x="790" y="300">商品检索</text>
-    <text class="node-copy" x="790" y="328">品类 · 样本价 · 证据硬过滤</text>
+    <text class="node-copy" x="790" y="328">品类 · 预算 · 库存硬过滤</text>
 
     <path d="M 1092 222 L 1174 289 L 1092 356 L 1010 289 Z" fill="#F7F9FF" stroke="#8B8EEB" stroke-width="2"/>
     <text class="node-title" x="1092" y="282" text-anchor="middle">存在</text>
@@ -80,13 +80,13 @@
     <circle cx="1247" cy="259" r="16" fill="url(#brand)"/>
     <text class="step" x="1247" y="264" text-anchor="middle">04</text>
     <text class="node-title" x="1240" y="300">规则排序</text>
-    <text class="node-copy" x="1240" y="328">daily_rule_v1 · 稳定 Top 3</text>
+    <text class="node-copy" x="1240" y="328">rule_v1 · 稳定 Top 3</text>
 
     <rect x="1476" y="230" width="236" height="118" rx="22" fill="#FFFFFF" stroke="#DDE3EC"/>
     <circle cx="1507" cy="259" r="16" fill="url(#brand)"/>
     <text class="step" x="1507" y="264" text-anchor="middle">05</text>
     <text class="node-title" x="1500" y="300">理由生成</text>
-    <text class="node-copy" x="1500" y="328">事实守卫 · 样本价 · 证据</text>
+    <text class="node-copy" x="1500" y="328">事实守卫 · 预算 · 取舍</text>
 
     <rect x="1760" y="216" width="110" height="146" rx="26" fill="#17233A"/>
     <text x="1815" y="252" text-anchor="middle" font-size="14" font-weight="700" fill="#FF9A62">END</text>
@@ -116,7 +116,7 @@
     <rect x="490" y="461" width="72" height="26" rx="13" fill="#7B6CE8"/>
     <text x="526" y="480" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">追问分支</text>
     <text class="node-title" x="490" y="520">只追问一个关键问题</text>
-    <text class="node-copy" x="490" y="547">品类 → 预算 → 功效场景</text>
+    <text class="node-copy" x="490" y="547">品类 → 预算 → 使用场景</text>
   </g>
 
   <!-- no-result branch -->
@@ -127,7 +127,7 @@
     <rect x="940" y="461" width="86" height="26" rx="13" fill="#DE6B68"/>
     <text x="983" y="480" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">兜底分支</text>
     <text class="node-title" x="940" y="520">不虚构商品，给可执行建议</text>
-    <text class="node-copy" x="940" y="547">样本价门槛 · 证据不足 · 扩展方向</text>
+    <text class="node-copy" x="940" y="547">最低可用价 · 预算差额 · 放宽方向</text>
   </g>
 
   <!-- branch routes to unified response -->
@@ -139,17 +139,17 @@
     <rect x="64" y="680" width="1806" height="92" rx="22" fill="#FFFFFF" stroke="#DDE3EC"/>
     <rect x="64" y="680" width="8" height="92" rx="4" fill="url(#brand)"/>
     <text class="footer-head" x="96" y="717">透明排序权重</text>
-    <text class="footer-copy" x="96" y="744">需求匹配 40%</text>
+    <text class="footer-copy" x="96" y="744">需求匹配 35%</text>
     <circle cx="254" cy="737" r="3" fill="#C0C8D5"/>
-    <text class="footer-copy" x="270" y="744">预算匹配 20%</text>
+    <text class="footer-copy" x="270" y="744">预算匹配 25%</text>
     <circle cx="429" cy="737" r="3" fill="#C0C8D5"/>
-    <text class="footer-copy" x="445" y="744">历史销量 15%</text>
+    <text class="footer-copy" x="445" y="744">评分 20%</text>
     <circle cx="555" cy="737" r="3" fill="#C0C8D5"/>
-    <text class="footer-copy" x="571" y="744">历史评论 10%</text>
+    <text class="footer-copy" x="571" y="744">销量 10%</text>
     <circle cx="681" cy="737" r="3" fill="#C0C8D5"/>
-    <text class="footer-copy" x="697" y="744">证据 15%</text>
+    <text class="footer-copy" x="697" y="744">库存 10%</text>
     <line x1="840" y1="700" x2="840" y2="752" stroke="#E0E5ED"/>
     <text class="footer-head" x="874" y="717">展示边界</text>
-    <text class="footer-copy" x="874" y="744">日化历史商品样本与离线等价规则 · 非 Coze 平台截图 · 不包含用户或订单信息</text>
+    <text class="footer-copy" x="874" y="744">合成商品与离线等价规则 · 非 Coze 平台截图 · 不包含真实用户或商家数据</text>
   </g>
 </svg>
