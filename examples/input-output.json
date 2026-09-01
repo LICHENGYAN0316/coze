@@ -1,101 +1,140 @@
 {
   "artifact_type": "local_equivalent_examples",
-  "schema_version": "1.0.0",
-  "catalog_version": "1.0.0",
-  "rule_version": "rule_v1",
+  "schema_version": "2.0.0",
+  "catalog_version": "2.0.0",
+  "rule_version": "daily_rule_v1",
   "coze_native_execution": false,
-  "disclaimer_zh": "以下结果由公开商品库和 workflow-spec.md 中的等价规则离线验算，用于让访问者免登录理解流程；它们不是 Coze 平台运行日志。真实 Coze 实测完成后应追加独立的原生运行证据，不覆盖本字段。",
+  "disclaimer_zh": "以下结果由日化历史商品样本和确定性规则离线复算，不是 Coze 平台运行日志；样本价只是离线数据字段。",
   "cases": [
     {
       "case_id": "A",
-      "title": "完整需求：轻薄编程本",
+      "title": "功效推荐：补水喷雾",
       "input": {
-        "query": "想买轻薄笔记本，主要编程和出差，预算8000，续航优先"
+        "query": "预算200元，想要补水喷雾，通勤随身用，补水优先"
       },
       "output": {
         "status": "recommend",
         "parsed": {
-          "category": "笔记本电脑",
-          "budget": 8000,
-          "use_case": ["编程", "出差"],
-          "priority": ["轻薄", "续航"]
+          "category": "补水喷雾",
+          "budget": 200,
+          "use_case": [
+            "补水",
+            "通勤"
+          ],
+          "priority": [
+            "补水"
+          ],
+          "skin_type": null,
+          "avoid_ingredients": [],
+          "requires_verified_evidence": false
         },
         "missing_fields": [],
         "question": null,
         "recommendations": [
           {
             "rank": 1,
-            "id": "NB-001",
-            "brand": "星澜",
-            "name": "星澜 Air 14",
-            "price": 6999,
-            "score": 89.98,
+            "id": "A520711852230",
+            "shop": "雅漾",
+            "name": "雅漾舒护活泉水喷雾 300ml",
+            "sample_price": 186,
+            "sample_price_label": "样本价",
+            "score": 98.6,
             "score_breakdown": {
               "need_match": 100.0,
-              "budget_match": 87.49,
-              "rating_normalized": 80.0,
-              "sales_normalized": 71.11,
-              "stock_availability": 100.0
+              "budget_match": 93.0,
+              "historical_sales_normalized": 100.0,
+              "historical_comments_normalized": 100.0,
+              "evidence_quality": 100.0
             },
-            "matched_needs": ["编程", "出差", "轻薄", "续航"],
-            "why_fit": "同时覆盖编程与出差场景，商品字段明确标注轻薄、续航、32GB 内存和 75Wh 电池。",
-            "budget_gap": 1001,
-            "budget_relation": "价格为 6999 元，预算余量 1001 元。",
-            "tradeoff": "集成显卡不适合重度 3D 渲染。"
+            "matched_needs": [
+              "补水",
+              "通勤"
+            ],
+            "why_fit": "基础功效检索命中补水、通勤；功效词按原字段的证据等级展示。",
+            "budget_gap": 14.0,
+            "sample_price_relation": "样本价为 186 元，与预算上限相差 14 元。",
+            "tradeoff": "历史样本与当前官方配方可能存在版本差异，购买前仍需核对包装成分表。",
+            "evidence_level": "official_current_reference",
+            "evidence_sources": [
+              "https://www.aveneusa.com/thermal-spring-water-300ml"
+            ]
           },
           {
             "rank": 2,
-            "id": "NB-002",
-            "brand": "云帆",
-            "name": "云帆 Pro 14",
-            "price": 7999,
-            "score": 75.91,
+            "id": "A16178432714",
+            "shop": "悦诗风吟",
+            "name": "悦诗风吟绿茶矿物质喷雾 50ml",
+            "sample_price": 40,
+            "sample_price_label": "样本价",
+            "score": 54.18,
             "score_breakdown": {
-              "need_match": 75.0,
-              "budget_match": 99.99,
-              "rating_normalized": 70.0,
-              "sales_normalized": 46.67,
-              "stock_availability": 60.0
+              "need_match": 100.0,
+              "budget_match": 20.0,
+              "historical_sales_normalized": 27.83,
+              "historical_comments_normalized": 22.52,
+              "evidence_quality": 25.0
             },
-            "matched_needs": ["编程", "出差", "续航"],
-            "why_fit": "覆盖编程与出差场景，并提供 80Wh 电池、32GB 内存和接口较齐全等字段证据。",
-            "budget_gap": 1,
-            "budget_relation": "价格为 7999 元，预算余量 1 元。",
-            "tradeoff": "机身约 1.46kg，并非同组最轻。"
+            "matched_needs": [
+              "补水",
+              "通勤"
+            ],
+            "why_fit": "基础功效检索命中补水、通勤；功效词按原字段的证据等级展示。",
+            "budget_gap": 160.0,
+            "sample_price_relation": "样本价为 40 元，与预算上限相差 160 元。",
+            "tradeoff": "功效词来自历史商品标题，未完成当前官方配方核实。",
+            "evidence_level": "not_verified",
+            "evidence_sources": []
           },
           {
             "rank": 3,
-            "id": "NB-004",
-            "brand": "远行",
-            "name": "远行 Lite 13",
-            "price": 5799,
-            "score": 74.37,
+            "id": "A530838038113",
+            "shop": "薇姿",
+            "name": "薇姿润泉舒缓喷雾 300ml",
+            "sample_price": 175,
+            "sample_price_label": "样本价",
+            "score": 41.88,
             "score_breakdown": {
-              "need_match": 75.0,
-              "budget_match": 72.49,
-              "rating_normalized": 50.0,
-              "sales_normalized": 100.0,
-              "stock_availability": 100.0
+              "need_match": 50.0,
+              "budget_match": 87.5,
+              "historical_sales_normalized": 1.68,
+              "historical_comments_normalized": 3.77,
+              "evidence_quality": 25.0
             },
-            "matched_needs": ["出差", "轻薄", "续航"],
-            "why_fit": "0.98kg 机身、60Wh 电池与出差场景匹配，轻薄与续航字段也覆盖了高频差旅需求。",
-            "budget_gap": 2201,
-            "budget_relation": "价格为 5799 元，预算余量 2201 元。",
-            "tradeoff": "16GB 内存不可扩展。"
+            "matched_needs": [
+              "补水"
+            ],
+            "why_fit": "基础功效检索命中补水；功效词按原字段的证据等级展示。",
+            "budget_gap": 25.0,
+            "sample_price_relation": "样本价为 175 元，与预算上限相差 25 元。",
+            "tradeoff": "功效词来自历史商品标题，未完成当前官方配方核实，不用于敏感肌或成分避雷判断。",
+            "evidence_level": "not_verified",
+            "evidence_sources": []
           }
         ],
         "fallback": null,
         "trace": {
-          "rule_version": "rule_v1",
-          "catalog_version": "1.0.0",
+          "rule_version": "daily_rule_v1",
+          "catalog_version": "2.0.0",
           "retrieval_executed": true,
           "eligible_count": 4,
           "returned_count": 3,
-          "excluded_by_category": ["PH-001", "PH-002", "PH-003", "PH-004", "PH-005", "HP-001", "HP-002", "HP-003", "HP-004", "HP-005"],
-          "excluded_by_budget": ["NB-005"],
-          "excluded_by_stock": [],
+          "excluded_by_category": [
+            "A20332739108",
+            "A18297865077",
+            "A521465605447",
+            "A531798731214",
+            "A530360831836",
+            "A15486609514",
+            "A520709155253",
+            "A520766167032",
+            "A530370395615",
+            "A35516256562"
+          ],
+          "excluded_by_budget": [
+            "A534995666285"
+          ],
+          "excluded_by_evidence": [],
           "same_category_total_count": 5,
-          "same_category_in_stock_count": 5,
           "clarified_field": null,
           "source_nodes": {
             "rule_version": "assets",
@@ -105,9 +144,8 @@
             "returned_count": "build_response",
             "excluded_by_category": "retrieve_catalog",
             "excluded_by_budget": "retrieve_catalog",
-            "excluded_by_stock": "retrieve_catalog",
+            "excluded_by_evidence": "retrieve_catalog",
             "same_category_total_count": "retrieve_catalog",
-            "same_category_in_stock_count": "retrieve_catalog",
             "clarified_field": "clarify_one_field"
           }
         }
@@ -115,33 +153,41 @@
     },
     {
       "case_id": "B",
-      "title": "信息不足：只说降噪耳机",
+      "title": "信息不足：敏感肌与成分避雷",
       "input": {
-        "query": "想买降噪耳机"
+        "query": "想找适合敏感肌的保湿乳霜，避开香精"
       },
       "output": {
         "status": "need_clarification",
         "parsed": {
-          "category": "头戴耳机",
+          "category": "保湿乳霜",
           "budget": null,
-          "use_case": [],
-          "priority": ["降噪"]
+          "use_case": [
+            "保湿"
+          ],
+          "priority": [],
+          "skin_type": "敏感肌",
+          "avoid_ingredients": [
+            "香精"
+          ],
+          "requires_verified_evidence": true
         },
-        "missing_fields": ["budget", "use_case"],
-        "question": "你的预算上限大约是多少？例如 1000 元、2000 元或 5000 元。",
+        "missing_fields": [
+          "budget"
+        ],
+        "question": "你的样本价预算上限是多少？例如 100 元、200 元或 300 元。",
         "recommendations": [],
         "fallback": null,
         "trace": {
-          "rule_version": "rule_v1",
-          "catalog_version": "1.0.0",
+          "rule_version": "daily_rule_v1",
+          "catalog_version": "2.0.0",
           "retrieval_executed": false,
           "eligible_count": 0,
           "returned_count": 0,
           "excluded_by_category": [],
           "excluded_by_budget": [],
-          "excluded_by_stock": [],
+          "excluded_by_evidence": [],
           "same_category_total_count": 0,
-          "same_category_in_stock_count": 0,
           "clarified_field": "budget",
           "source_nodes": {
             "rule_version": "assets",
@@ -151,9 +197,8 @@
             "returned_count": "build_response",
             "excluded_by_category": "retrieve_catalog",
             "excluded_by_budget": "retrieve_catalog",
-            "excluded_by_stock": "retrieve_catalog",
+            "excluded_by_evidence": "retrieve_catalog",
             "same_category_total_count": "retrieve_catalog",
-            "same_category_in_stock_count": "retrieve_catalog",
             "clarified_field": "clarify_one_field"
           }
         }
@@ -161,43 +206,66 @@
     },
     {
       "case_id": "C",
-      "title": "无结果：预算远低于品类最低价",
+      "title": "无结果：样本价上限过低",
       "input": {
-        "query": "预算100元买高性能笔记本"
+        "query": "预算20元，想买控油定妆产品"
       },
       "output": {
         "status": "no_result",
         "parsed": {
-          "category": "笔记本电脑",
-          "budget": 100,
-          "use_case": ["高性能"],
-          "priority": ["性能"]
+          "category": "清洁定妆",
+          "budget": 20,
+          "use_case": [
+            "控油",
+            "定妆"
+          ],
+          "priority": [
+            "控油"
+          ],
+          "skin_type": null,
+          "avoid_ingredients": [],
+          "requires_verified_evidence": false
         },
         "missing_fields": [],
         "question": null,
         "recommendations": [],
         "fallback": {
-          "type": "budget_below_floor",
-          "reason": "合成商品库中没有同时满足笔记本电脑、价格不高于 100 元且有库存的候选。",
-          "available_price_floor": 5799,
-          "required_budget_increase": 5699,
+          "type": "budget_below_sample_floor",
+          "reason": "当前离线日化历史样本中，没有同时满足品类和样本价上限的候选。",
+          "available_sample_price_floor": 50.0,
+          "required_budget_increase": 30.0,
           "actions": [
-            "把预算上限提高到至少 5799 元，再重新比较当前商品库。",
-            "如果预算不能调整，可放宽“高性能”优先项，但仍需重新设定可购预算。",
-            "若只需临时计算能力，可另外评估云端算力或二手渠道；本商品库不提供此类具体商品。"
+            "将样本价上限调整到至少 50 元后重新比较。",
+            "扩展离线样本库后再检索。"
           ]
         },
         "trace": {
-          "rule_version": "rule_v1",
-          "catalog_version": "1.0.0",
+          "rule_version": "daily_rule_v1",
+          "catalog_version": "2.0.0",
           "retrieval_executed": true,
           "eligible_count": 0,
           "returned_count": 0,
-          "excluded_by_category": ["PH-001", "PH-002", "PH-003", "PH-004", "PH-005", "HP-001", "HP-002", "HP-003", "HP-004", "HP-005"],
-          "excluded_by_budget": ["NB-001", "NB-002", "NB-003", "NB-004", "NB-005"],
-          "excluded_by_stock": [],
+          "excluded_by_category": [
+            "A520711852230",
+            "A530838038113",
+            "A16178432714",
+            "A15172018097",
+            "A534995666285",
+            "A20332739108",
+            "A18297865077",
+            "A521465605447",
+            "A531798731214",
+            "A530360831836"
+          ],
+          "excluded_by_budget": [
+            "A15486609514",
+            "A520709155253",
+            "A520766167032",
+            "A530370395615",
+            "A35516256562"
+          ],
+          "excluded_by_evidence": [],
           "same_category_total_count": 5,
-          "same_category_in_stock_count": 5,
           "clarified_field": null,
           "source_nodes": {
             "rule_version": "assets",
@@ -207,9 +275,8 @@
             "returned_count": "build_response",
             "excluded_by_category": "retrieve_catalog",
             "excluded_by_budget": "retrieve_catalog",
-            "excluded_by_stock": "retrieve_catalog",
+            "excluded_by_evidence": "retrieve_catalog",
             "same_category_total_count": "retrieve_catalog",
-            "same_category_in_stock_count": "retrieve_catalog",
             "clarified_field": "clarify_one_field"
           }
         }
@@ -217,94 +284,112 @@
     },
     {
       "case_id": "D",
-      "title": "完整需求：5000 元内拍照手机",
+      "title": "严格证据：敏感肌、避开香精与保湿",
       "input": {
-        "query": "5000元以内拍照好的手机，日常通勤"
+        "query": "300元内想买保湿乳霜，敏感肌，希望保湿修护，避开香精"
       },
       "output": {
         "status": "recommend",
         "parsed": {
-          "category": "智能手机",
-          "budget": 5000,
-          "use_case": ["拍照", "通勤"],
-          "priority": ["拍照"]
+          "category": "保湿乳霜",
+          "budget": 300,
+          "use_case": [
+            "保湿",
+            "修护"
+          ],
+          "priority": [
+            "保湿"
+          ],
+          "skin_type": "敏感肌",
+          "avoid_ingredients": [
+            "香精"
+          ],
+          "requires_verified_evidence": true
         },
         "missing_fields": [],
         "question": null,
         "recommendations": [
           {
             "rank": 1,
-            "id": "PH-001",
-            "brand": "映川",
-            "name": "映川 Note 12",
-            "price": 4599,
-            "score": 92.67,
+            "id": "A20332739108",
+            "shop": "倩碧",
+            "name": "倩碧卓越润肤凝露（无油）",
+            "sample_price": 295,
+            "sample_price_label": "样本价",
+            "score": 79.67,
             "score_breakdown": {
-              "need_match": 100.0,
-              "budget_match": 91.98,
-              "rating_normalized": 80.0,
-              "sales_normalized": 86.75,
-              "stock_availability": 100.0
+              "need_match": 50.0,
+              "budget_match": 98.33,
+              "historical_sales_normalized": 100.0,
+              "historical_comments_normalized": 100.0,
+              "evidence_quality": 100.0
             },
-            "matched_needs": ["拍照", "通勤"],
-            "why_fit": "拍照与通勤场景均命中，且商品字段包含主摄光学防抖、夜景成片稳定和 5000mAh 电池。",
-            "budget_gap": 401,
-            "budget_relation": "价格为 4599 元，预算余量 401 元。",
-            "tradeoff": "长焦能力弱于同组旗舰款。"
+            "matched_needs": [
+              "保湿"
+            ],
+            "why_fit": "通过当前官方证据门槛，官方页面明确包含敏感肌适用表述，且明确不添加香精。",
+            "budget_gap": 5.0,
+            "sample_price_relation": "样本价为 295 元，与预算上限相差 5 元。",
+            "tradeoff": "历史标题未明确规格，因此官方字段仅按产品线匹配；购买前核对包装成分表。",
+            "evidence_level": "official_current_reference",
+            "evidence_sources": [
+              "https://www.clinique.com/product/1687/5047/skincare/moisturizers/dramatically-differenttm-moisturizing-gel"
+            ]
           },
           {
             "rank": 2,
-            "id": "PH-002",
-            "brand": "光域",
-            "name": "光域 Pro 5",
-            "price": 4999,
-            "score": 90.26,
+            "id": "A18297865077",
+            "shop": "倩碧",
+            "name": "倩碧卓越润肤乳（有油）",
+            "sample_price": 295,
+            "sample_price_label": "样本价",
+            "score": 70.81,
             "score_breakdown": {
-              "need_match": 100.0,
-              "budget_match": 99.98,
-              "rating_normalized": 70.0,
-              "sales_normalized": 62.65,
-              "stock_availability": 100.0
+              "need_match": 50.0,
+              "budget_match": 98.33,
+              "historical_sales_normalized": 77.43,
+              "historical_comments_normalized": 45.28,
+              "evidence_quality": 100.0
             },
-            "matched_needs": ["拍照", "通勤"],
-            "why_fit": "拍照与通勤场景均命中，并提供人像长焦、4K 视频和视频防抖等商品字段。",
-            "budget_gap": 1,
-            "budget_relation": "价格为 4999 元，预算余量 1 元。",
-            "tradeoff": "高负载时机身温度上升较快。"
-          },
-          {
-            "rank": 3,
-            "id": "PH-003",
-            "brand": "轻行",
-            "name": "轻行 Mini 8",
-            "price": 3699,
-            "score": 85.5,
-            "score_breakdown": {
-              "need_match": 100.0,
-              "budget_match": 73.98,
-              "rating_normalized": 60.0,
-              "sales_normalized": 100.0,
-              "stock_availability": 100.0
-            },
-            "matched_needs": ["拍照", "通勤"],
-            "why_fit": "拍照与通勤场景均命中，168g 机身、主摄光学防抖和随手拍启动快适合日常携带。",
-            "budget_gap": 1301,
-            "budget_relation": "价格为 3699 元，预算余量 1301 元。",
-            "tradeoff": "没有独立长焦镜头。"
+            "matched_needs": [
+              "保湿"
+            ],
+            "why_fit": "通过当前官方证据门槛，官方页面明确包含敏感肌适用表述，且明确不添加香精。",
+            "budget_gap": 5.0,
+            "sample_price_relation": "样本价为 295 元，与预算上限相差 5 元。",
+            "tradeoff": "历史标题未明确规格，因此官方字段仅按产品线匹配；购买前核对包装成分表。",
+            "evidence_level": "official_current_reference",
+            "evidence_sources": [
+              "https://www.clinique.com/product/1687/26651/skincare/moisturizers/dramatically-different-moisturizing-lotiontm"
+            ]
           }
         ],
         "fallback": null,
         "trace": {
-          "rule_version": "rule_v1",
-          "catalog_version": "1.0.0",
+          "rule_version": "daily_rule_v1",
+          "catalog_version": "2.0.0",
           "retrieval_executed": true,
-          "eligible_count": 4,
-          "returned_count": 3,
-          "excluded_by_category": ["NB-001", "NB-002", "NB-003", "NB-004", "NB-005", "HP-001", "HP-002", "HP-003", "HP-004", "HP-005"],
-          "excluded_by_budget": ["PH-005"],
-          "excluded_by_stock": [],
+          "eligible_count": 2,
+          "returned_count": 2,
+          "excluded_by_category": [
+            "A520711852230",
+            "A530838038113",
+            "A16178432714",
+            "A15172018097",
+            "A534995666285",
+            "A15486609514",
+            "A520709155253",
+            "A520766167032",
+            "A530370395615",
+            "A35516256562"
+          ],
+          "excluded_by_budget": [],
+          "excluded_by_evidence": [
+            "A521465605447",
+            "A531798731214",
+            "A530360831836"
+          ],
           "same_category_total_count": 5,
-          "same_category_in_stock_count": 5,
           "clarified_field": null,
           "source_nodes": {
             "rule_version": "assets",
@@ -314,9 +399,8 @@
             "returned_count": "build_response",
             "excluded_by_category": "retrieve_catalog",
             "excluded_by_budget": "retrieve_catalog",
-            "excluded_by_stock": "retrieve_catalog",
+            "excluded_by_evidence": "retrieve_catalog",
             "same_category_total_count": "retrieve_catalog",
-            "same_category_in_stock_count": "retrieve_catalog",
             "clarified_field": "clarify_one_field"
           }
         }

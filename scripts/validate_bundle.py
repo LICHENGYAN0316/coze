@@ -1,80 +1,37 @@
 #!/usr/bin/env python3
-"""Validate the public Coze MVP bundle with Python's standard library only.
-
-The validator independently reconstructs hard filtering and rule_v1 ranking from
-the catalog. It also validates the separately labelled Coze platform manifest;
-it never turns a local result or a name-only change into a native-run claim.
-"""
+"""验证日化历史数据 Coze MVP 公开交付包。"""
 
 from __future__ import annotations
 
 import argparse
 import json
 import math
-import sys
+import re
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
+
+from recommendation_core import RULE_VERSION, TRACE_SOURCES, WEIGHTS, build_output, hard_filter
 
 
 ROOT = Path(__file__).resolve().parents[1]
 JSON_PATHS = {
     "workflow": Path("workflow/coze-workflow-equivalent.json"),
     "catalog": Path("data/products.json"),
+    "attributes": Path("data/verified-product-attributes.json"),
     "examples": Path("examples/input-output.json"),
     "platform_runs": Path("examples/coze-platform-runs.json"),
 }
-EXPECTED_CATEGORIES = {"笔记本电脑", "智能手机", "头戴耳机"}
-EXPECTED_STATUSES = {
-    "A": "recommend",
-    "B": "need_clarification",
-    "C": "no_result",
-    "D": "recommend",
-}
-OUTPUT_FIELDS = {
-    "status",
-    "parsed",
-    "missing_fields",
-    "question",
-    "recommendations",
-    "fallback",
-    "trace",
-}
+EXPECTED_CATEGORIES = {"补水喷雾", "保湿乳霜", "清洁定妆"}
+EXPECTED_STATUSES = {"A": "recommend", "B": "need_clarification", "C": "no_result", "D": "recommend"}
+OUTPUT_FIELDS = {"status", "parsed", "missing_fields", "question", "recommendations", "fallback", "trace"}
 TRACE_FIELDS = {
-    "rule_version",
-    "catalog_version",
-    "retrieval_executed",
-    "eligible_count",
-    "returned_count",
-    "excluded_by_category",
-    "excluded_by_budget",
-    "excluded_by_stock",
-    "same_category_total_count",
-    "same_category_in_stock_count",
-    "clarified_field",
-    "source_nodes",
+    "rule_version", "catalog_version", "retrieval_executed", "eligible_count", "returned_count",
+    "excluded_by_category", "excluded_by_budget", "excluded_by_evidence",
+    "same_category_total_count", "clarified_field", "source_nodes",
 }
-TRACE_SOURCES = {
-    "rule_version": "assets",
-    "catalog_version": "assets",
-    "retrieval_executed": "build_response",
-    "eligible_count": "retrieve_catalog",
-    "returned_count": "build_response",
-    "excluded_by_category": "retrieve_catalog",
-    "excluded_by_budget": "retrieve_catalog",
-    "excluded_by_stock": "retrieve_catalog",
-    "same_category_total_count": "retrieve_catalog",
-    "same_category_in_stock_count": "retrieve_catalog",
-    "clarified_field": "clarify_one_field",
-}
-WEIGHTS = {
-    "need_match": 0.35,
-    "budget_match": 0.25,
-    "rating_normalized": 0.20,
-    "sales_normalized": 0.10,
-    "stock_availability": 0.10,
-}
+OFFICIAL_PRODUCT_IDS = {"A520711852230", "A20332739108", "A18297865077", "A15486609514"}
 
 
 @dataclass
@@ -93,463 +50,173 @@ class ValidationResult:
 
 
 def load_bundle(base_dir: Path = ROOT) -> tuple[dict[str, Any], list[str]]:
-    """Load all JSON artifacts and report parse errors without traceback."""
     loaded: dict[str, Any] = {}
     errors: list[str] = []
-    for name, relative_path in JSON_PATHS.items():
-        path = base_dir / relative_path
+    for name, relative in JSON_PATHS.items():
         try:
-            with path.open("r", encoding="utf-8") as handle:
-                loaded[name] = json.load(handle)
+            loaded[name] = json.loads((base_dir / relative).read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            errors.append(f"{relative_path}: JSON 读取失败：{exc}")
+            errors.append(f"{relative}: JSON 读取失败：{exc}")
     return loaded, errors
 
 
 def _is_number(value: Any) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
-
-
-def _close(actual: Any, expected: float, tolerance: float = 0.011) -> bool:
-    return _is_number(actual) and math.isclose(
-        float(actual), expected, rel_tol=0.0, abs_tol=tolerance
-    )
-
-
-def _unique(values: Iterable[str]) -> list[str]:
-    result: list[str] = []
-    for value in values:
-        if value not in result:
-            result.append(value)
-    return result
-
-
-def _product_text(product: dict[str, Any]) -> list[str]:
-    values: list[str] = []
-    for field_name in ("use_cases", "features", "highlights"):
-        values.extend(str(value) for value in product.get(field_name, []))
-    return values
-
-
-def _matched_needs(product: dict[str, Any], demand_tokens: list[str]) -> list[str]:
-    evidence = _product_text(product)
-    return [token for token in demand_tokens if any(token in item for item in evidence)]
-
-
-def _hard_filter(
-    products: list[dict[str, Any]], category: str, budget: float
-) -> dict[str, list[dict[str, Any]]]:
-    same_category = [product for product in products if product["category"] == category]
-    return {
-        "eligible": [
-            product
-            for product in same_category
-            if product["price"] <= budget and product["stock"] > 0
-        ],
-        "excluded_by_category": [
-            product for product in products if product["category"] != category
-        ],
-        "excluded_by_budget": [
-            product for product in same_category if product["price"] > budget
-        ],
-        # Reasons are mutually exclusive: out-of-stock is counted only in budget.
-        "excluded_by_stock": [
-            product
-            for product in same_category
-            if product["price"] <= budget and product["stock"] <= 0
-        ],
-        "same_category": same_category,
-        "same_category_in_stock": [
-            product for product in same_category if product["stock"] > 0
-        ],
-    }
-
-
-def _score_products(
-    eligible: list[dict[str, Any]], budget: float, demand_tokens: list[str]
-) -> list[dict[str, Any]]:
-    if not eligible:
-        return []
-    max_sales = max(product["sales"] for product in eligible)
-    scored: list[dict[str, Any]] = []
-    for product in eligible:
-        matches = _matched_needs(product, demand_tokens)
-        need_match = len(matches) / len(demand_tokens) * 100 if demand_tokens else 0.0
-        breakdown = {
-            "need_match": need_match,
-            "budget_match": product["price"] / budget * 100,
-            "rating_normalized": min(max(product["rating"] - 4.0, 0.0), 1.0) * 100,
-            "sales_normalized": product["sales"] / max_sales * 100,
-            "stock_availability": min(product["stock"] / 20, 1.0) * 100,
-        }
-        score = sum(WEIGHTS[key] * breakdown[key] for key in WEIGHTS)
-        scored.append(
-            {
-                "product": product,
-                "matched_needs": matches,
-                "breakdown": breakdown,
-                "score": score,
-            }
-        )
-    scored.sort(
-        key=lambda item: (
-            -item["score"],
-            -item["product"]["rating"],
-            item["product"]["price"],
-            item["product"]["id"],
-        )
-    )
-    return scored
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(float(value))
 
 
 def _validate_workflow(workflow: dict[str, Any], result: ValidationResult) -> None:
-    output_schema = workflow.get("output_schema", {})
-    result.check(
-        set(output_schema.get("required", [])) == OUTPUT_FIELDS,
-        "workflow: output_schema 必须要求七个统一顶层字段",
-    )
-    nodes = {
-        node.get("id"): node
-        for node in workflow.get("graph", {}).get("nodes", [])
-        if isinstance(node, dict)
+    result.check(workflow.get("native_export") is False, "workflow: 等价配置不得伪装成 Coze 原生导出")
+    project = workflow.get("project", {})
+    result.check(project.get("publication_status") == "未部署", "workflow: 发布状态必须保持未部署")
+    result.check("日化" in str(project.get("name")), "workflow: 项目名称未切换为日化")
+    doubao = workflow.get("doubao", {})
+    result.check(doubao.get("secret_ref") == "ARK_API_KEY", "workflow: 豆包密钥必须使用 ARK_API_KEY Secret 引用")
+    result.check(doubao.get("integration_state") == "configuration_ready_secret_not_provisioned", "workflow: 不得在未配密钥时声称已完成在线调用")
+    result.check(workflow.get("assets", {}).get("price_field") == "sample_price", "workflow: 价格字段必须是 sample_price")
+    required = set(workflow.get("output_schema", {}).get("required", []))
+    result.check(required == OUTPUT_FIELDS, "workflow: 七个统一顶层字段契约已改变")
+    nodes = {node.get("id"): node for node in workflow.get("graph", {}).get("nodes", []) if isinstance(node, dict)}
+    expected_nodes = {
+        "start", "intent_extract", "normalize_fields", "required_fields", "clarify_one_field",
+        "retrieve_catalog", "has_candidates", "rule_rank_v1", "reason_generate", "fact_guard",
+        "no_result_fallback", "build_response", "end",
     }
-    for node_id in ("retrieve_catalog", "no_result_fallback", "build_response", "end"):
-        result.check(node_id in nodes, f"workflow: 缺少节点 {node_id}")
-    if "build_response" not in nodes or "end" not in nodes:
-        return
-
-    build = nodes["build_response"]
-    end = nodes["end"]
-    result.check(
-        OUTPUT_FIELDS.issubset(set(build.get("outputs", []))),
-        "workflow: BuildResponse 未完整产出七个顶层字段",
-    )
-    branch_mappings = build.get("config", {}).get("branch_mappings", {})
-    result.check(
-        set(branch_mappings) == {"need_clarification", "recommend", "no_result"},
-        "workflow: BuildResponse 必须覆盖追问、推荐、无结果三分支",
-    )
-    for branch, expected_status in (
-        ("need_clarification", "need_clarification"),
-        ("recommend", "recommend"),
-        ("no_result", "no_result"),
-    ):
-        mapping = branch_mappings.get(branch, {})
-        result.check(
-            mapping.get("status") == expected_status,
-            f"workflow: {branch} 分支 status 映射错误",
-        )
-        result.check(
-            OUTPUT_FIELDS <= set(mapping),
-            f"workflow: {branch} 分支缺少统一响应字段映射",
-        )
-
-    result.check(
-        set(end.get("outputs", [])) == OUTPUT_FIELDS,
-        "workflow: End 必须显式输出七个字段",
-    )
-    field_mapping = end.get("config", {}).get("field_mapping", {})
-    result.check(
-        set(field_mapping) == OUTPUT_FIELDS,
-        "workflow: End field_mapping 必须逐项映射七个字段",
-    )
-    result.check(
-        all(field_mapping.get(key) == f"build_response.{key}" for key in OUTPUT_FIELDS),
-        "workflow: End 字段必须全部来自 BuildResponse",
-    )
-
-    edges = {
-        (edge.get("from"), edge.get("to"))
-        for edge in workflow.get("graph", {}).get("edges", [])
-        if isinstance(edge, dict)
-    }
-    for upstream in ("clarify_one_field", "fact_guard", "no_result_fallback"):
-        result.check(
-            (upstream, "build_response") in edges,
-            f"workflow: {upstream} 未汇入 BuildResponse",
-        )
-    result.check(
-        ("build_response", "end") in edges,
-        "workflow: BuildResponse 未连接 End",
-    )
-    fallback_logic = " ".join(
-        nodes.get("no_result_fallback", {}).get("config", {}).get("logic", [])
-    )
-    result.check(
-        "no_stock" in fallback_logic and "same_category_in_stock_count == 0" in fallback_logic,
-        "workflow: 无结果节点缺少同品类全部无库存的 no_stock 兜底",
-    )
-    source_nodes = build.get("config", {}).get("trace_mapping", {}).get("source_nodes", {})
-    result.check(
-        source_nodes == TRACE_SOURCES,
-        "workflow: trace.source_nodes 与约定节点来源不一致",
-    )
-    formula = (
-        nodes.get("rule_rank_v1", {}).get("config", {}).get("formula", "")
-    )
-    result.check(
-        formula
-        == "0.35*need_match + 0.25*budget_match + 0.20*rating_normalized + 0.10*sales_normalized + 0.10*stock_availability",
-        "workflow: rule_v1 分数公式与公开规格不一致",
-    )
+    result.check(set(nodes) == expected_nodes, "workflow: 原交互节点结构已变更")
+    intent = nodes.get("intent_extract", {}).get("config", {})
+    result.check(intent.get("credential") == {"type": "secret_ref", "name": "ARK_API_KEY"}, "workflow: IntentExtract 未使用 Coze Secret")
+    formula = nodes.get("rule_rank_v1", {}).get("config", {}).get("formula")
+    expected_formula = "0.40*need_match + 0.20*budget_match + 0.15*historical_sales_normalized + 0.10*historical_comments_normalized + 0.15*evidence_quality"
+    result.check(formula == expected_formula, "workflow: daily_rule_v1 公开公式不一致")
+    result.check(math.isclose(sum(WEIGHTS.values()), 1.0), "workflow: 排序权重之和不为 1")
+    build = nodes.get("build_response", {})
+    result.check(OUTPUT_FIELDS <= set(build.get("outputs", [])), "workflow: BuildResponse 统一输出不完整")
+    branches = build.get("config", {}).get("branch_mappings", {})
+    result.check(set(branches) == {"need_clarification", "recommend", "no_result"}, "workflow: 三种交互分支已改变")
+    for mapping in branches.values():
+        result.check(OUTPUT_FIELDS <= set(mapping), "workflow: 分支未输出统一字段")
+    result.check(build.get("config", {}).get("trace_mapping", {}).get("source_nodes") == TRACE_SOURCES, "workflow: trace 来源映射不一致")
 
 
 def _validate_catalog(catalog: dict[str, Any], result: ValidationResult) -> list[dict[str, Any]]:
-    products = catalog.get("products", [])
     metadata = catalog.get("dataset", {})
-    result.check(isinstance(products, list), "catalog: products 必须是数组")
+    products = catalog.get("products", [])
+    result.check(metadata.get("historical") is True, "catalog: 必须明确 historical=true")
+    result.check(metadata.get("price_field") == "sample_price" and metadata.get("price_label") == "样本价", "catalog: 样本价语义未锁定")
+    result.check(metadata.get("product_count") == 15 and isinstance(products, list) and len(products) == 15, "catalog: 必须包含 15 条日化商品样本")
     if not isinstance(products, list):
         return []
-    result.check(len(products) == 15, f"catalog: 应有 15 条商品，实际 {len(products)} 条")
-    result.check(metadata.get("product_count") == 15, "catalog: product_count 必须为 15")
-    result.check(metadata.get("synthetic") is True, "catalog: 必须明确 synthetic=true")
     ids = [product.get("id") for product in products if isinstance(product, dict)]
-    result.check(len(ids) == len(set(ids)), "catalog: 商品 ID 必须唯一")
+    result.check(len(ids) == len(set(ids)), "catalog: 商品 ID 不唯一")
     counts = Counter(product.get("category") for product in products if isinstance(product, dict))
-    result.check(set(counts) == EXPECTED_CATEGORIES, "catalog: 品类集合不正确")
-    for category in sorted(EXPECTED_CATEGORIES):
-        result.check(counts[category] == 5, f"catalog: {category} 应有 5 条商品")
+    result.check(set(counts) == EXPECTED_CATEGORIES, "catalog: 日化品类集合不正确")
+    for category in EXPECTED_CATEGORIES:
+        result.check(counts[category] == 5, f"catalog: {category} 应有 5 条")
     required = {
-        "id",
-        "category",
-        "brand",
-        "name",
-        "price",
-        "rating",
-        "sales",
-        "stock",
-        "use_cases",
-        "features",
-        "highlights",
-        "limitations",
+        "id", "category", "shop", "name", "sample_price", "historical_sales_count",
+        "historical_comment_count", "use_cases", "merchant_title_claims", "highlights",
+        "limitations", "verified_attributes",
     }
+    official_ids: set[str] = set()
     for product in products:
-        product_id = product.get("id", "<unknown>")
-        result.check(required <= set(product), f"catalog: {product_id} 字段不完整")
-        result.check(
-            _is_number(product.get("price")) and product.get("price", 0) > 0,
-            f"catalog: {product_id} price 必须为正数",
-        )
-        result.check(
-            isinstance(product.get("stock"), int) and product.get("stock", -1) >= 0,
-            f"catalog: {product_id} stock 必须为非负整数",
-        )
+        product_id = str(product.get("id", "<unknown>"))
+        result.check(required <= set(product), f"catalog/{product_id}: 字段不完整")
+        result.check("price" not in product, f"catalog/{product_id}: 不得使用无时间语义的 price 字段")
+        result.check(_is_number(product.get("sample_price")) and product["sample_price"] > 0, f"catalog/{product_id}: sample_price 必须为正数")
+        for field_name in ("historical_sales_count", "historical_comment_count"):
+            value = product.get(field_name)
+            result.check(value is None or (_is_number(value) and value >= 0), f"catalog/{product_id}: {field_name} 必须为非负数或 null")
+        verified = product.get("verified_attributes", {})
+        status = verified.get("status")
+        result.check(status in {"official_current_reference", "not_verified"}, f"catalog/{product_id}: 证据状态无效")
+        if status == "official_current_reference":
+            official_ids.add(product_id)
+            result.check(verified.get("identity_match") in {"exact_product_and_size", "product_line_match"}, f"catalog/{product_id}: 缺少产品身份匹配类型")
+            result.check(bool(verified.get("sources")) and all(str(url).startswith("https://") for url in verified["sources"]), f"catalog/{product_id}: 缺少官方 HTTPS 来源")
+            result.check(re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(verified.get("checked_at"))) is not None, f"catalog/{product_id}: checked_at 无效")
+            result.check("历史" in str(verified.get("scope_note")) or "当前" in str(verified.get("scope_note")), f"catalog/{product_id}: 缺少配方版本边界")
+        else:
+            result.check(verified.get("sources") == [] and verified.get("sensitive_skin_claim") is None, f"catalog/{product_id}: 未核实商品不得带安全性来源或断言")
+    result.check(official_ids == OFFICIAL_PRODUCT_IDS, "catalog: 官方核实商品集合与结构化属性表不一致")
     return products
 
 
-def _ids(products: Iterable[dict[str, Any]]) -> list[str]:
-    return [product["id"] for product in products]
-
-
-def _validate_trace(
-    case_id: str,
-    trace: dict[str, Any],
-    filters: dict[str, list[dict[str, Any]]] | None,
-    returned_count: int,
-    result: ValidationResult,
-) -> None:
-    result.check(TRACE_FIELDS <= set(trace), f"case {case_id}: trace 字段不完整")
-    result.check(
-        trace.get("source_nodes") == TRACE_SOURCES,
-        f"case {case_id}: trace.source_nodes 不正确",
-    )
-    if filters is None:
-        result.check(trace.get("retrieval_executed") is False, f"case {case_id}: 不应执行检索")
-        result.check(trace.get("eligible_count") == 0, f"case {case_id}: 默认候选数应为 0")
-        for key in ("excluded_by_category", "excluded_by_budget", "excluded_by_stock"):
-            result.check(trace.get(key) == [], f"case {case_id}: {key} 默认值应为 []")
-        result.check(
-            trace.get("same_category_total_count") == 0
-            and trace.get("same_category_in_stock_count") == 0,
-            f"case {case_id}: 未检索时同品类计数应为 0",
-        )
-    else:
-        result.check(trace.get("retrieval_executed") is True, f"case {case_id}: 应执行检索")
-        expected = {
-            "eligible_count": len(filters["eligible"]),
-            "excluded_by_category": _ids(filters["excluded_by_category"]),
-            "excluded_by_budget": _ids(filters["excluded_by_budget"]),
-            "excluded_by_stock": _ids(filters["excluded_by_stock"]),
-            "same_category_total_count": len(filters["same_category"]),
-            "same_category_in_stock_count": len(filters["same_category_in_stock"]),
-        }
-        for key, value in expected.items():
-            result.check(trace.get(key) == value, f"case {case_id}: trace.{key} 与硬过滤重算不一致")
-    result.check(
-        trace.get("returned_count") == returned_count,
-        f"case {case_id}: returned_count 与推荐数组长度不一致",
-    )
-
-
-def _validate_examples(
-    examples: dict[str, Any], products: list[dict[str, Any]], result: ValidationResult
-) -> None:
-    cases = examples.get("cases", [])
-    result.check(isinstance(cases, list), "examples: cases 必须是数组")
-    if not isinstance(cases, list):
+def _validate_attribute_table(attributes: dict[str, Any], catalog: dict[str, Any], result: ValidationResult) -> None:
+    rows = attributes.get("products", [])
+    result.check(attributes.get("record_count") == 4 and isinstance(rows, list) and len(rows) == 4, "attributes: 必须包含 4 条官方核实属性")
+    if not isinstance(rows, list):
         return
-    by_id = {case.get("case_id"): case for case in cases if isinstance(case, dict)}
-    result.check(set(by_id) == set(EXPECTED_STATUSES), "examples: 必须且只能包含 A、B、C、D 四个用例")
-    products_by_id = {product["id"]: product for product in products}
+    by_id = {row.get("id"): row for row in rows if isinstance(row, dict)}
+    result.check(set(by_id) == OFFICIAL_PRODUCT_IDS, "attributes: 商品 ID 集合不正确")
+    products_by_id = {product.get("id"): product for product in catalog.get("products", []) if isinstance(product, dict)}
+    for product_id in OFFICIAL_PRODUCT_IDS:
+        row = by_id.get(product_id, {})
+        product = products_by_id.get(product_id, {})
+        verified = product.get("verified_attributes", {})
+        result.check(row.get("name") == product.get("name"), f"attributes/{product_id}: name 与商品库不一致")
+        for key in (
+            "identity_match", "ingredient_list_complete", "ingredients", "key_ingredients",
+            "formulated_without", "sensitive_skin_claim", "official_claims", "scope_note", "sources",
+        ):
+            result.check(row.get(key) == verified.get(key), f"attributes/{product_id}: {key} 与商品库嵌入属性不一致")
+        result.check(verified.get("checked_at") == attributes.get("checked_at"), f"attributes/{product_id}: 核查日期不一致")
 
+
+def _validate_examples(examples: dict[str, Any], catalog: dict[str, Any], result: ValidationResult) -> None:
+    result.check(examples.get("coze_native_execution") is False, "examples: 离线示例不得标成 Coze 原生执行")
+    result.check(examples.get("catalog_version") == catalog.get("dataset", {}).get("version"), "examples: catalog_version 不一致")
+    result.check(examples.get("rule_version") == RULE_VERSION, "examples: rule_version 不一致")
+    cases = examples.get("cases", [])
+    by_id = {case.get("case_id"): case for case in cases if isinstance(case, dict)}
+    result.check(set(by_id) == set(EXPECTED_STATUSES), "examples: 必须且只能包含 A-D")
     for case_id, expected_status in EXPECTED_STATUSES.items():
         case = by_id.get(case_id)
         if case is None:
             continue
         output = case.get("output", {})
-        result.check(OUTPUT_FIELDS <= set(output), f"case {case_id}: 统一输出字段不完整")
-        result.check(output.get("status") == expected_status, f"case {case_id}: status 应为 {expected_status}")
-        recommendations = output.get("recommendations", [])
-        result.check(isinstance(recommendations, list), f"case {case_id}: recommendations 必须是数组")
-        if not isinstance(recommendations, list):
-            recommendations = []
+        result.check(set(output) == OUTPUT_FIELDS, f"case {case_id}: 七个顶层字段不完整")
+        result.check(output.get("status") == expected_status, f"case {case_id}: status 错误")
         trace = output.get("trace", {})
+        result.check(TRACE_FIELDS <= set(trace), f"case {case_id}: trace 字段不完整")
+        result.check(trace.get("source_nodes") == TRACE_SOURCES, f"case {case_id}: trace.source_nodes 错误")
+        expected = build_output(catalog, output.get("parsed", {}), list(output.get("missing_fields", [])))
+        result.check(output == expected, f"case {case_id}: 输出与 daily_rule_v1 重算结果不一致")
+        for recommendation in output.get("recommendations", []):
+            result.check("price" not in recommendation and recommendation.get("sample_price_label") == "样本价", f"case {case_id}: 推荐未使用样本价语义")
+        if output.get("parsed", {}).get("requires_verified_evidence") and output.get("status") == "recommend":
+            filters = hard_filter(catalog["products"], output["parsed"])
+            eligible_ids = {product["id"] for product in filters["eligible"]}
+            rec_ids = {recommendation["id"] for recommendation in output["recommendations"]}
+            result.check(rec_ids <= eligible_ids, f"case {case_id}: 敏感肌/避雷推荐绕过官方证据门槛")
+            result.check(all(recommendation.get("evidence_level") == "official_current_reference" for recommendation in output["recommendations"]), f"case {case_id}: 严格证据推荐混入未核实商品")
 
-        if expected_status == "need_clarification":
-            result.check(bool(output.get("missing_fields")), f"case {case_id}: 必须返回缺失字段")
-            result.check(isinstance(output.get("question"), str) and bool(output["question"]), f"case {case_id}: 必须只返回一个追问文本")
-            result.check(recommendations == [], f"case {case_id}: 追问分支不得推荐")
-            result.check(output.get("fallback") is None, f"case {case_id}: 追问分支 fallback 应为 null")
-            _validate_trace(case_id, trace, None, 0, result)
-            result.check(trace.get("clarified_field") == "budget", "case B: 本轮应优先追问 budget")
+
+def _validate_platform_runs(platform_runs: dict[str, Any], result: ValidationResult) -> None:
+    result.check(platform_runs.get("project_id") == "7679015075092578350", "platform_runs: project_id 不正确")
+    result.check(platform_runs.get("publication_status") == "未部署", "platform_runs: 必须保持未部署")
+    migration = platform_runs.get("daily_migration", {})
+    result.check(migration.get("native_canvas_updated") is False, "platform_runs: 未操作 Coze 画布时不得声称已同步")
+    result.check(migration.get("native_run") == "not_performed", "platform_runs: 未执行时不得声称日化版原生运行通过")
+    result.check(migration.get("secret_provisioned") is False, "platform_runs: 未配置密钥时不得声称已接通豆包")
+    result.check(platform_runs.get("evidence") == [], "platform_runs: 日化版未实测时不应挂载旧截图")
+
+
+def _validate_secret_boundary(base_dir: Path, result: ValidationResult) -> None:
+    env_path = base_dir / ".env.example"
+    try:
+        env_text = env_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        result.check(False, f"secret: .env.example 读取失败：{exc}")
+        return
+    result.check(re.search(r"(?m)^ARK_API_KEY=$", env_text) is not None, "secret: .env.example 必须保留空的 ARK_API_KEY 占位")
+    result.check("doubao-seed" in env_text, "secret: .env.example 缺少可替换的豆包模型占位")
+    for path in base_dir.rglob("*"):
+        if not path.is_file() or ".git" in path.parts or path.suffix.lower() in {".png", ".jpg", ".jpeg", ".gif"}:
             continue
-
-        parsed = output.get("parsed", {})
-        category = parsed.get("category")
-        budget = parsed.get("budget")
-        result.check(category in EXPECTED_CATEGORIES, f"case {case_id}: category 无效")
-        result.check(_is_number(budget) and budget > 0, f"case {case_id}: budget 必须为正数")
-        if category not in EXPECTED_CATEGORIES or not _is_number(budget) or budget <= 0:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
             continue
-        filters = _hard_filter(products, category, float(budget))
-        _validate_trace(case_id, trace, filters, len(recommendations), result)
-        result.check(trace.get("clarified_field") is None, f"case {case_id}: 非追问分支 clarified_field 应为 null")
-
-        recommendation_ids = [item.get("id") for item in recommendations]
-        eligible_ids = set(_ids(filters["eligible"]))
-        result.check(
-            len(recommendation_ids) == len(set(recommendation_ids)),
-            f"case {case_id}: 推荐 ID 不得重复",
-        )
-        result.check(
-            set(recommendation_ids) <= eligible_ids,
-            f"case {case_id}: 推荐中存在未通过品类/预算/库存硬过滤的商品",
-        )
-
-        if expected_status == "no_result":
-            result.check(not filters["eligible"], f"case {case_id}: no_result 但硬过滤仍有候选")
-            result.check(recommendations == [], f"case {case_id}: no_result 推荐数组必须为空")
-            fallback = output.get("fallback") or {}
-            in_stock = filters["same_category_in_stock"]
-            if in_stock:
-                price_floor = min(product["price"] for product in in_stock)
-                result.check(fallback.get("available_price_floor") == price_floor, f"case {case_id}: 最低可用价错误")
-                result.check(
-                    fallback.get("required_budget_increase") == price_floor - budget,
-                    f"case {case_id}: 预算提升差额错误",
-                )
-                result.check(fallback.get("type") == "budget_below_floor", f"case {case_id}: fallback type 错误")
-            continue
-
-        result.check(bool(filters["eligible"]), f"case {case_id}: recommend 但没有硬过滤候选")
-        result.check(output.get("fallback") is None, f"case {case_id}: recommend 分支 fallback 应为 null")
-        result.check(output.get("question") is None, f"case {case_id}: recommend 分支 question 应为 null")
-        demand_tokens = _unique(parsed.get("use_case", []) + parsed.get("priority", []))
-        scored = _score_products(filters["eligible"], float(budget), demand_tokens)
-        expected_top = scored[:3]
-        result.check(
-            recommendation_ids == [item["product"]["id"] for item in expected_top],
-            f"case {case_id}: Top 3 顺序与 rule_v1 重算不一致",
-        )
-
-        for rank, (recommendation, expected) in enumerate(zip(recommendations, expected_top), start=1):
-            product_id = recommendation.get("id")
-            product = products_by_id.get(product_id, {})
-            result.check(recommendation.get("rank") == rank, f"case {case_id}/{product_id}: rank 错误")
-            result.check(
-                recommendation.get("price") == product.get("price"),
-                f"case {case_id}/{product_id}: price 与商品库不一致",
-            )
-            result.check(
-                recommendation.get("budget_gap") == budget - product.get("price", 0),
-                f"case {case_id}/{product_id}: budget_gap 必须等于 budget-price",
-            )
-            result.check(
-                recommendation.get("matched_needs") == expected["matched_needs"],
-                f"case {case_id}/{product_id}: matched_needs 重算不一致",
-            )
-            breakdown = recommendation.get("score_breakdown", {})
-            for component, expected_value in expected["breakdown"].items():
-                result.check(
-                    _close(breakdown.get(component), round(expected_value, 2)),
-                    f"case {case_id}/{product_id}: {component} 分项错误",
-                )
-            result.check(
-                _close(recommendation.get("score"), round(expected["score"], 2)),
-                f"case {case_id}/{product_id}: 总分不符合 rule_v1 公式",
-            )
-            tradeoff = str(recommendation.get("tradeoff", "")).rstrip("。")
-            result.check(
-                any(tradeoff == limitation.rstrip("。") for limitation in product.get("limitations", [])),
-                f"case {case_id}/{product_id}: tradeoff 不来自 limitations",
-            )
-            why_fit = str(recommendation.get("why_fit", ""))
-            result.check(
-                "预算余量" not in why_fit and "预算差" not in why_fit,
-                f"case {case_id}/{product_id}: why_fit 混入预算余量，应只放在 budget_relation",
-            )
-
-
-def _validate_platform_runs(
-    platform_runs: dict[str, Any], result: ValidationResult, base_dir: Path = ROOT
-) -> None:
-    """Validate truthfulness boundaries and evidence links in the platform manifest."""
-    result.check(
-        platform_runs.get("project_id") == "7679015075092578350",
-        "platform_runs: project_id 不正确",
-    )
-    result.check(
-        platform_runs.get("publication_status") == "未部署",
-        "platform_runs: 必须保持未部署",
-    )
-    result.check(
-        platform_runs.get("native_run_version") == "v0.2.0",
-        "platform_runs: 原生运行版本必须明确为 v0.2.0",
-    )
-    summary = platform_runs.get("native_run_summary", {})
-    cases = summary.get("cases", [])
-    by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
-    result.check(summary.get("passed") == 4 and summary.get("total") == 4, "platform_runs: 原生运行应记录 4/4")
-    result.check(set(by_id) == set(EXPECTED_STATUSES), "platform_runs: 必须且只能包含 A-D")
-    for case_id, expected_status in EXPECTED_STATUSES.items():
-        case = by_id.get(case_id, {})
-        result.check(case.get("status") == expected_status, f"platform_runs/{case_id}: status 错误")
-        evidence = case.get("evidence")
-        result.check(isinstance(evidence, str) and bool(evidence), f"platform_runs/{case_id}: 缺少证据路径")
-        if isinstance(evidence, str):
-            evidence_path = (base_dir / "examples" / evidence).resolve()
-            result.check(evidence_path.is_file(), f"platform_runs/{case_id}: 证据文件不存在")
-
-    change = platform_runs.get("v0_2_1_change", {})
-    result.check(platform_runs.get("current_project_version") == "v0.2.1", "platform_runs: 当前版本应为 v0.2.1")
-    result.check(change.get("static_name_audit") == "passed", "platform_runs: v0.2.1 名称扫描未通过")
-    result.check(
-        change.get("native_rerun") == "not_completed_due_to_platform_resource_quota",
-        "platform_runs: 不得把 v0.2.1 标为已完成原生复跑",
-    )
-    name_map = change.get("name_map", {})
-    expected_ids = {f"NB{i:03d}" for i in range(1, 6)} | {f"PH{i:03d}" for i in range(1, 6)} | {f"EP{i:03d}" for i in range(1, 6)}
-    result.check(set(name_map) == expected_ids, "platform_runs: v0.2.1 名称映射必须覆盖 15 个商品 ID")
-    forbidden = (
-        "Apple", "华为", "小米", "OPPO", "联想", "ThinkPad", "Redmi", "ROG",
-        "Sony", "JBL", "Galaxy", "FindX", "SwiftBook", "ProTrek", "BookPro",
-        "AirBook", "MatePro", "AirPods", "FreeBuds", "PhantomAir", "PinePhone",
-    )
-    for product_id, name in name_map.items():
-        result.check(
-            isinstance(name, str) and not any(token.lower() in name.lower() for token in forbidden),
-            f"platform_runs/{product_id}: v0.2.1 名称仍含真实或近似系列词",
-        )
+        result.check(re.search(r"(?i)(?:api[_-]?key|authorization)\s*[:=]\s*['\"]?[A-Za-z0-9_-]{24,}", text) is None, f"secret: {path.relative_to(base_dir)} 疑似包含真实密钥")
 
 
 def validate_loaded(
@@ -558,48 +225,48 @@ def validate_loaded(
     examples: dict[str, Any],
     platform_runs: dict[str, Any] | None = None,
     base_dir: Path = ROOT,
+    attributes: dict[str, Any] | None = None,
 ) -> ValidationResult:
-    """Validate already-loaded objects; useful for unit tests and negative fixtures."""
     result = ValidationResult()
     _validate_workflow(workflow, result)
-    products = _validate_catalog(catalog, result)
-    _validate_examples(examples, products, result)
+    _validate_catalog(catalog, result)
+    if attributes is None:
+        try:
+            attributes = json.loads((base_dir / JSON_PATHS["attributes"]).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            result.check(False, f"attributes: 读取失败：{exc}")
+    if attributes is not None:
+        _validate_attribute_table(attributes, catalog, result)
+    _validate_examples(examples, catalog, result)
     if platform_runs is not None:
-        _validate_platform_runs(platform_runs, result, base_dir)
+        _validate_platform_runs(platform_runs, result)
+    _validate_secret_boundary(base_dir, result)
     return result
 
 
 def validate_bundle(base_dir: Path = ROOT) -> ValidationResult:
-    loaded, load_errors = load_bundle(base_dir)
-    if load_errors:
-        return ValidationResult(errors=load_errors, checks=3)
+    loaded, errors = load_bundle(base_dir)
+    if errors:
+        return ValidationResult(errors=errors, checks=len(JSON_PATHS))
     return validate_loaded(
-        loaded["workflow"],
-        loaded["catalog"],
-        loaded["examples"],
-        loaded["platform_runs"],
-        base_dir,
+        loaded["workflow"], loaded["catalog"], loaded["examples"], loaded["platform_runs"],
+        base_dir, attributes=loaded["attributes"],
     )
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="验证智选 Agent Coze MVP 公开交付包")
-    parser.add_argument(
-        "--base-dir",
-        type=Path,
-        default=ROOT,
-        help="仓库根目录（默认自动使用脚本上一级目录）",
-    )
+    parser = argparse.ArgumentParser(description="验证智选 Agent 日化历史数据 Coze MVP 交付包")
+    parser.add_argument("--base-dir", type=Path, default=ROOT)
     args = parser.parse_args(argv)
     result = validate_bundle(args.base_dir.resolve())
     if result.ok:
         print(f"PASS: {result.checks} 项断言全部通过。")
-        print("已验证：4 份 JSON、15 条商品（每品类 5 条）、A-D 本地用例、硬过滤、rule_v1、关键 trace、平台证据路径与 v0.2.1 名称边界。")
-        print("说明：本地复算、v0.2.0 原生运行记录与 v0.2.1 名称修正保持分层标注。")
+        print("已验证：15 条日化历史商品样本、样本价语义、A-D 交互、敏感肌/成分证据门槛、daily_rule_v1、豆包 Secret 边界。")
+        print("说明：Coze 日化画布与豆包在线调用仍标记为尚未执行。")
         return 0
-    print(f"FAIL: {len(result.errors)} 项失败（共执行 {result.checks} 项断言）。", file=sys.stderr)
+    print(f"FAIL: {len(result.errors)} 项失败（共执行 {result.checks} 项断言）。")
     for error in result.errors:
-        print(f"- {error}", file=sys.stderr)
+        print(f"- {error}")
     return 1
 
 

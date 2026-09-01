@@ -1,198 +1,155 @@
 <div align="center">
 
-# 智选 Agent｜Coze MVP
+# 智选 Agent｜日化历史数据 Coze MVP
 
-### 把模糊的 3C 购买需求，编排成可追踪、可解释、可兜底的低代码决策流程
+### 用豆包抽取需求，用可复算规则做功效推荐、敏感肌筛选与成分避雷
 
-`Coze Workflow` · `3C 电商` · `主动追问` · `可解释排序` · `合成数据`
+`Coze Workflow` · `日化历史数据` · `主动追问` · `证据门槛` · `可解释排序`
 
-**[立即体验自研完整版 →](https://zhixuan-agent-cn.plupluto.chatgpt.site/)**
-
-[查看 Coze 项目](https://code.coze.cn/p/7679015075092578350/preview) · [查看工作流规格](workflow/workflow-spec.md) · [查看平台运行摘要](examples/coze-platform-runs.json) · [查看测试报告](examples/test-report.md)
+[Coze 项目页](https://code.coze.cn/p/7679015075092578350/preview) · [工作流规格](workflow/workflow-spec.md) · [离线用例](examples/input-output.json) · [测试报告](examples/test-report.md)
 
 </div>
 
-![智选 Agent｜Coze MVP 封面](media/demo-cover.png)
+![智选 Agent 日化 Coze MVP 封面](media/demo-cover.svg)
 
-![无需登录即可观看的核心流程演示](media/coze-mvp-demo.gif)
+## 当前状态
 
----
+本仓库已将公开等价配置、商品样本、A–D 用例、验证器和文档统一迁移为日化历史数据语义。原有交互结构保持不变：需求抽取、缺失信息时只追问一项、硬过滤、稳定排序、理由生成、事实校验和无结果兜底仍是同一套节点与三种输出状态。
 
-## 这是什么
+> 重要：当前完成的是 GitHub 子项目中的等价配置与离线复算。Coze 平台画布尚未在本次操作中写入，豆包 Secret 也未代用户配置，因此不声称日化版已完成 Coze 原生运行。
 
-这是「智选 Agent」的 **Coze 核心流程 MVP**：用较小、透明的工作流验证智能导购最关键的产品闭环，而不是把一次大模型回答包装成推荐系统。
+> 字段边界：离线数据中的金额统一写作 **样本价**；工作流不把它包装成实时商品信息。
 
-用户可以直接说“想买轻薄笔记本，主要编程和出差，预算 8000，续航优先”。流程先把自然语言转成结构化约束；信息不足时只问一个高价值问题；信息完整后执行硬过滤、可解释规则排序和事实受限的理由生成；没有候选时明确说明原因并给出放宽路径。
+## 60 秒看懂流程
 
-> **无需登录 Coze 也能审阅。** 本仓库保留流程图、节点契约、15 条合成商品、等价配置、四组输入输出、自动验证与脱敏的原生运行截图。Coze `v0.2.0` 已完成 A–D 四组原生试运行；当前 `v0.2.1` 只替换了 15 个商品名称并通过静态黑名单扫描，原生截图均按实际版本明确标注。项目始终保持未部署。
-
-> **配置说明：** 当前 Coze Coding 项目视图没有提供可直接导入的单文件原生导出。本仓库因此公开 [`coze-workflow-equivalent.json`](workflow/coze-workflow-equivalent.json) 作为结构化等价配置，并用平台项目 ID、版本号、四组原生截图与可运行验证器交叉证明；不会把等价配置冒充成 Coze 原生导出。
-
-## 60 秒看懂核心流程
-
-![工作流总览：需求抽取、主动追问、检索排序、理由生成与无结果兜底](media/workflow-overview.png)
+![日化需求抽取、证据过滤、规则排序与兜底](media/workflow-overview.svg)
 
 ```mermaid
 flowchart LR
-    A([用户需求]) --> B[参数提取]
+    A([用户需求]) --> B[豆包抽取字段]
     B --> C{信息完整?}
     C -- 否 --> D[只追问一个\n关键缺失项]
-    C -- 是 --> E[商品检索\n品类/预算/库存]
+    C -- 是 --> E[本地商品检索\n品类/样本价/证据]
     E --> F{有候选?}
-    F -- 否 --> G[无结果兜底\n预算差额/放宽方向]
-    F -- 是 --> H[rule_v1\n可解释排序]
-    H --> I[Top 3 推荐理由]
+    F -- 否 --> G[无结果兜底\n样本价门槛/证据不足]
+    F -- 是 --> H[daily_rule_v1\n可复算排序]
+    H --> I[最多 Top 3]
     I --> J[事实守卫]
 ```
 
-| 阶段 | 产品决策 | 输出可检查什么 |
+| 阶段 | 产品决策 | 可检查边界 |
 | --- | --- | --- |
-| 参数提取 | 品类、预算、使用场景、优先项分开表达 | 模型有没有擅自补全用户没说的信息 |
-| 主动追问 | 一轮只问最关键的一项 | 对话负担是否可控，`missing_fields` 是否完整 |
-| 商品检索 | 品类、预算、库存作为硬约束 | 为什么某商品被排除 |
-| 规则排序 | 五个 0–100 分项加权 | 排名是否可复算，而不是“模型觉得” |
-| 理由生成 | 只允许引用商品库字段 | 推荐理由是否有事实来源与明确取舍 |
-| 无结果兜底 | 返回最低可用价与放宽动作 | 是否拒绝编造不存在的商品 |
+| 需求抽取 | 豆包只抽取品类、预算、功效、肤质和避开成分 | 不允许模型发明配方或商品事实 |
+| 主动追问 | 每轮只问一项 | `missing_fields` 仍保留全部缺失项 |
+| 基础检索 | 品类与样本价是硬约束 | 标题功效词按商家标题证据展示 |
+| 敏感肌/避雷 | 启用官方证据门槛 | 没有明确官方来源就不做安全断言 |
+| 排序 | 确定性代码复算五个分项 | 大模型不计算分数 |
+| 事实守卫 | 覆盖 ID、名称、样本价、差额与证据链 | 理由不得越过商品表字段 |
 
-## 一个需求如何变成 Top 3
+## 数据怎么用
 
-**输入**
+[`data/products.json`](data/products.json) 是从用户提供的离线日化商品历史快照中清洗、去重并挑选的 15 条商品级样本，每个品类 5 条：
+
+- `name` / `shop` / `sample_price` / `historical_*` 来自历史样本；
+- 促销日期标签不进入展示名称；
+- 缺失的历史销量或评论保持 `null`，不伪造观测值；
+- 订单、顾客、地址、支付和聊天字段均不进入子仓库；
+- 原始表不提交到 GitHub。
+
+更详细的清洗与授权边界见 [`data/README.md`](data/README.md) 和 [`DATA_LICENSE.md`](DATA_LICENSE.md)。
+
+## 敏感肌、成分避雷与功效推荐
+
+`verified_attributes` 把两种证据分开：
+
+- `not_verified`：只有历史商家标题，可用于基础功效检索，不用于敏感肌或成分避雷断言；
+- `official_current_reference`：产品身份与当前官方页面可匹配，保存成分、明确不添加项、敏感肌声称、核查日期与来源 URL。
+
+当前严格核实子集包含 4 条：雅漾舒护活泉水喷雾 300ml、悦诗风吟控油矿物质散粉 5g、倩碧卓越润肤凝露产品线和倩碧卓越润肤乳产品线。当前官方配方只是参考版本，不倒推历史样本的配方必然完全相同。
+
+## 四个固定用例
+
+| 用例 | 覆盖能力 | 期望状态 |
+| --- | --- | --- |
+| A | 200 元内补水喷雾，通勤与补水优先 | `recommend` |
+| B | 敏感肌保湿乳霜并避开香精，但没有预算 | `need_clarification` |
+| C | 控油定妆的样本价上限低于样本库门槛 | `no_result` |
+| D | 300 元内敏感肌保湿乳霜，避开香精 | `recommend`，只能返回通过官方证据门槛的商品 |
+
+完整输入、抽取字段、排序分项、排除 ID 与来源 URL 见 [`examples/input-output.json`](examples/input-output.json)。
+
+## 可解释排序：`daily_rule_v1`
 
 ```text
-想买轻薄笔记本，主要编程和出差，预算8000，续航优先
+score = 0.40 × 需求匹配
+      + 0.20 × 预算匹配
+      + 0.15 × 历史销量归一化
+      + 0.10 × 历史评论归一化
+      + 0.15 × 证据质量
 ```
 
-**结构化需求**
+敏感肌或成分避雷不是软分数，而是排序前的硬门槛：商品必须存在官方来源，敏感肌声称必须为真，每个需避开成分必须明确出现在官方 `formulated_without` 列表中。
 
-```json
-{
-  "category": "笔记本电脑",
-  "budget": 8000,
-  "use_case": ["编程", "出差"],
-  "priority": ["轻薄", "续航"]
-}
-```
+## 豆包 API 接入
 
-**本地等价规则结果**
-
-| 排名 | 商品 | 总分 | 预算余量 | 核心适配 | 明确取舍 |
-| ---: | --- | ---: | ---: | --- | --- |
-| 1 | 星澜 Air 14 | 89.98 | ¥1,001 | 编程、出差、轻薄、续航全部命中 | 集成显卡不适合重度 3D 渲染 |
-| 2 | 云帆 Pro 14 | 75.91 | ¥1 | 编程、出差、续航命中 | 1.46kg，并非同组最轻 |
-| 3 | 远行 Lite 13 | 74.37 | ¥2,201 | 出差、轻薄、续航命中 | 16GB 内存不可扩展 |
-
-每个分项、候选数量与排除原因都可以在[完整示例](examples/input-output.json)中逐项核对。
-
-## 三种确定的输出状态
-
-| 状态 | 触发条件 | 行为 |
-| --- | --- | --- |
-| `recommend` | 品类、预算、场景完整，且过滤后有候选 | 返回 Top 3、分项得分、预算关系与一项限制 |
-| `need_clarification` | 缺少品类、预算或使用场景 | 返回全部 `missing_fields`，但本轮只问一个问题 |
-| `no_result` | 信息完整，但硬过滤后没有候选 | 推荐数组保持为空，返回最低可用价与放宽动作 |
-
-四个固定用例覆盖了三种状态：
-
-- A：轻薄编程本 → Top 3；
-- B：只说“降噪耳机” → 先问预算，不提前推荐；
-- C：100 元高性能笔记本 → 无结果兜底；
-- D：5000 元内拍照手机 → Top 3。
-
-原生 Coze `v0.2.0` 试运行证据：
-
-- [A：完整需求 → `recommend`](evidence/coze-case-a-recommend.png)
-- [B：缺预算 → `need_clarification`](evidence/coze-case-b-clarification.png)
-- [C：预算过低 → `no_result`](evidence/coze-case-c-no-result.png)
-- [D：完整需求 → `recommend`](evidence/coze-case-d-recommend.png)
-
-## 可解释排序：`rule_v1`
-
-商品先通过三项硬过滤：**品类一致、价格不高于预算、库存大于 0**。只有合格候选进入排序：
+配置使用三个环境变量，空白模板见 [`.env.example`](.env.example)：
 
 ```text
-score = 0.35 × 需求匹配
-      + 0.25 × 预算匹配
-      + 0.20 × 评分归一化
-      + 0.10 × 销量归一化
-      + 0.10 × 库存可用性
+ARK_API_KEY=
+ARK_MODEL=doubao-seed-2-0-lite-260215
+ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
 ```
 
-五个分项均为 0–100。代码节点负责过滤、计算、预算差额与稳定排序；大模型只负责把结构化结果表达成自然语言。随后 `FactGuard` 再校验商品 ID、名称、价格、分数和限制，降低理由生成中的事实漂移。
-
-为什么 MVP 选择规则而不是深度学习：15 条合成商品不足以支撑可信的学习排序，规则更适合快速暴露需求抽取、追问时机、过滤边界与解释格式的问题。自研完整版则承担推荐模型、RAG 和离线指标的系统验证。
-
-## 两个版本分别证明什么
-
-| 版本 | 证明什么 |
-| --- | --- |
-| [自研完整版](https://github.com/LICHENGYAN0316/zhixuan-ai-shopping-agent-cn) | 数据、排序模型、RAG、指标、工程与产品能力 |
-| Coze MVP | 工作流编排、快速验证、低代码平台与交付效率 |
-
-**自研完整版在线演示：** [https://zhixuan-agent-cn.plupluto.chatgpt.site/](https://zhixuan-agent-cn.plupluto.chatgpt.site/)
-
-两者不是重复实现：完整版回答“如何把能力做深、做成系统”，Coze MVP 回答“如何用最低交付成本验证核心交互与业务规则”。
+在 Coze 中应把 `ARK_API_KEY` 配置为 Secret，不得写入等价 JSON、截图、输出或 Git 历史。如果 Secret 没有配置，工作流必须明确失败或使用无外部事实的本地抽取兜底，不得伪称已调用豆包。
 
 ## 仓库地图
 
 ```text
 .
-├── README.md
+├── .env.example                         # 豆包环境变量空模板
 ├── data/
-│   └── products.json                    # 15 条合成商品，3 个品类
+│   ├── products.json                    # 15 条日化历史商品样本
+│   ├── verified-product-attributes.json # 4 条官方来源结构化属性
+│   └── README.md                        # 清洗、字段和来源边界
 ├── workflow/
-│   ├── workflow-spec.md                 # 节点、变量、分支、公式与事实边界
-│   └── coze-workflow-equivalent.json    # 可读的等价配置；不是原生导出
+│   ├── workflow-spec.md                 # 节点、分支、公式与证据规则
+│   └── coze-workflow-equivalent.json    # 等价参考配置，不是原生导出
 ├── examples/
-│   ├── input-output.json                # A–D 四组完整结构化结果
-│   ├── coze-platform-runs.json          # 平台版本、原生结果与名称修正范围
-│   └── test-report.md                   # 本地验算与 Coze 原生试运行结论
+│   ├── input-output.json                # A–D 离线复算用例
+│   ├── coze-platform-runs.json          # 平台状态的真实边界
+│   └── test-report.md                   # 验收结果
 ├── scripts/
-│   └── validate_bundle.py               # 无依赖的 271 项一致性检查
-├── tests/
-│   └── test_bundle.py                   # 5 项防回归测试
-├── docs/
-│   ├── coze-build-notes.md              # 平台项目、版本、限制与搭建记录
-│   └── privacy.md                       # 公开边界与截图脱敏清单
-├── media/                               # 封面、流程图与免登录 GIF
-└── evidence/                            # 脱敏的平台画布与 A–D 原生输出
+│   ├── recommendation_core.py           # 确定性过滤与排序
+│   ├── generate_examples.py             # 重生成固定用例
+│   ├── verify_source_subset.py          # 可选的本地源表核对
+│   └── validate_bundle.py               # 公开交付包验证
+├── tests/test_bundle.py                  # 负例与证据门槛回归测试
+├── docs/                                 # 搭建、密钥与隐私边界
+└── media/                                # 仅保留已更新的 SVG 说明图
 ```
 
-## 免安装审阅路径
+## 本地验证
 
-本仓库提供两条互补的免登录审阅路径：
+```bash
+python3 scripts/generate_examples.py
+python3 scripts/validate_bundle.py
+python3 -m unittest discover -s tests -v
+```
 
-1. **快速看作品：** 先看首页 GIF、流程图和 [`evidence/`](evidence/README.md) 的 A–D 原生运行截图；
-2. **深入查实现：** 从 [`workflow-spec.md`](workflow/workflow-spec.md) 查看节点与分支，从 [`products.json`](data/products.json) 抽查商品事实，从 [`input-output.json`](examples/input-output.json) 复算结果；
-3. **一键验算：** 执行 `python3 scripts/validate_bundle.py` 与 `python3 -m unittest discover -s tests -v`；
-4. **看系统完整版：** 打开[自研完整版](https://zhixuan-agent-cn.plupluto.chatgpt.site/)，体验推荐模型、RAG、指标与完整产品 UI。
-
-若要在 Coze 复建，请按 [`coze-build-notes.md`](docs/coze-build-notes.md) 逐节点搭建。`coze-workflow-equivalent.json` 是跨版本可读的配置蓝图，**不能假设可以直接导入 Coze**。
-
-## 数据与真实性
-
-- 品牌、型号、价格、评分、销量与库存均为虚构；
-- 不包含真实订单、用户、商家、Cookie、令牌或账号信息；
-- 推荐理由只能引用商品记录中的字段；
-- `examples/input-output.json` 来自公开等价规则的本地复算，平台截图单独放在 `evidence/`，两者不会混称；
-- GIF 是基于合成用例制作的免登录讲解动画，画面中已明确注明“不是 Coze 平台截图”；
-- Coze 项目保持未部署，公开仓库不包含账号、令牌、运行日志或个人工作区信息。
-
-详见[隐私与公开边界](docs/privacy.md)。
+当前验证器会检查数据结构、样本价命名、四个官方核实记录、A–D 输出复算、敏感肌/避雷门槛、交互节点不变、豆包 Secret 引用和平台状态。
 
 ## 交付状态
 
 | 交付项 | 状态 |
 | --- | --- |
-| 产品流程与节点契约 | 已完成 |
-| 15 条合成商品库 | 已完成 |
-| 等价配置与四组离线示例 | 已完成 |
-| 本地规则一致性验算 | 271 项断言 + 5 项回归测试通过 |
-| Coze 原生项目 | 已完成：`7679015075092578350`，保持未部署 |
-| Coze `v0.2.0` 四组原生运行 | A–D 4/4 通过 |
-| Coze `v0.2.1` 名称合规修正 | 仅修改 15 个 `name` 字段；静态扫描通过；未把确定性预期冒充新一轮原生运行 |
-| 脱敏截图、流程图与 GIF | 已完成 |
-| 可直接导入的 Coze 原生单文件导出 | 当前项目视图不提供；已给出等价配置与限制说明 |
+| 15 条日化历史商品样本 | 已完成 |
+| 4 条官方来源的结构化属性 | 已完成 |
+| 功效推荐、敏感肌与成分避雷 | 已完成离线规则与回归测试 |
+| 原交互节点、三种状态和七字段输出 | 已保留 |
+| 豆包 API Secret 引用 | 配置已就绪，真实密钥未写入仓库 |
+| Coze 平台日化画布 | 未在本次 GitHub 更新中操作 |
+| Coze 日化版原生运行 | 未执行 |
 
 ## License
 
-本仓库代码与文档采用 [MIT License](LICENSE)。合成商品数据仅用于演示和测试，不代表真实市场信息或购买建议。
+原创代码与原创文档采用 [MIT License](LICENSE)。用户提供的原始数据不进入本仓库；历史商品样本、商标与官方产品事实不因本仓库获得新的权利许可。详见 [`DATA_LICENSE.md`](DATA_LICENSE.md)。

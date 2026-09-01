@@ -1,81 +1,18 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "2.0.0",
   "platform": "Coze（扣子）",
   "project_id": "7679015075092578350",
   "project_url": "https://code.coze.cn/p/7679015075092578350/preview",
   "publication_status": "未部署",
-  "native_run_version": "v0.2.0",
-  "native_run_summary": {
-    "passed": 4,
-    "total": 4,
-    "cases": [
-      {
-        "id": "A",
-        "query": "想买轻薄笔记本，主要编程和出差，预算8000，续航优先",
-        "status": "recommend",
-        "missing_fields": [],
-        "top3_v0_2_0": [
-          {"id": "NB001", "name": "星耀 SwiftBook 14", "score": 0.8565},
-          {"id": "NB002", "name": "瀚思 ProTrek T14", "score": 0.77},
-          {"id": "NB004", "name": "红驰 BookPro 15", "score": 0.71}
-        ],
-        "evidence": "../evidence/coze-case-a-recommend.png"
-      },
-      {
-        "id": "B",
-        "query": "想买降噪耳机",
-        "status": "need_clarification",
-        "missing_fields": ["budget"],
-        "question": "请问你的购机预算大概是多少呢？",
-        "recommendations": [],
-        "evidence": "../evidence/coze-case-b-clarification.png"
-      },
-      {
-        "id": "C",
-        "query": "预算100元买高性能笔记本",
-        "status": "no_result",
-        "missing_fields": [],
-        "recommendations": [],
-        "available_price_floor": 4299,
-        "fallback_types": ["提高预算", "放宽性能要求", "考虑相邻品类"],
-        "evidence": "../evidence/coze-case-c-no-result.png"
-      },
-      {
-        "id": "D",
-        "query": "5000元以内拍照好的手机，日常通勤",
-        "status": "recommend",
-        "missing_fields": [],
-        "top3_v0_2_0": [
-          {"id": "PH002", "name": "银禾 Galaxy 14", "score": 0.8538},
-          {"id": "PH004", "name": "晨光 FindX 7", "score": 0.821},
-          {"id": "PH005", "name": "红驰 NotePro 13", "score": 0.738}
-        ],
-        "evidence": "../evidence/coze-case-d-recommend.png"
-      }
-    ]
+  "current_reference_version": "daily-v1",
+  "daily_migration": {
+    "local_equivalent_config": "completed",
+    "local_examples": "passed",
+    "native_canvas_updated": false,
+    "native_run": "not_performed",
+    "secret_provisioned": false,
+    "reason": "本次只更新 GitHub 子项目，未在 Coze 平台写入画布、配置 Secret 或执行在线调用。"
   },
-  "current_project_version": "v0.2.1",
-  "v0_2_1_change": {
-    "scope": "仅修改 assets/products.json 中 15 条商品的 name；ID、价格、库存、评分、销量、使用场景、优缺点、代码、路由和分数零改动",
-    "static_name_audit": "passed",
-    "native_rerun": "not_completed_due_to_platform_resource_quota",
-    "name_map": {
-      "NB001": "星耀・轻羽 14",
-      "NB002": "瀚思・远航 14",
-      "NB003": "云迹・浮光 13",
-      "NB004": "红驰・峰境 15",
-      "NB005": "烈焰・幻刃 14",
-      "PH001": "果核・青果 15",
-      "PH002": "银禾・映界 14",
-      "PH003": "澜舟・远帆 60",
-      "PH004": "晨光・拾光 7",
-      "PH005": "红驰・光屿 13",
-      "EP001": "果核・云豆 2",
-      "EP002": "索声・静界 5",
-      "EP003": "漫声・悠听 820",
-      "EP004": "澜舟・清风 3",
-      "EP005": "节律・律动 770"
-    }
-  },
-  "truthfulness_note_zh": "v0.2.0 四组记录来自 Coze 原生试运行；v0.2.1 仅完成名称字段静态合规验证，未把确定性预期写成新的原生运行。"
+  "evidence": [],
+  "truthfulness_note_zh": "当前可证实的是日化等价配置、离线商品样本、确定性规则与本地回归测试；不将它们写成 Coze 原生执行证据。"
 }

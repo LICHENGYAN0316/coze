@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "table_name": "日化商品当前官方参考属性表",
+  "checked_at": "2026-09-01",
+  "record_count": 4,
+  "scope": "仅收录能与当前官方产品页匹配的历史商品样本。当前官方页面只作为现行参考，不倒推历史配方版本必然相同。",
+  "decision_policy": {
+    "sensitive_skin": "只有 sensitive_skin_claim=true 才能通过敏感肌门槛。",
+    "ingredient_avoidance": "需避开的每个成分都必须明确出现在 formulated_without 中。",
+    "formula_change": "使用时仍需核对手中产品包装成分表。"
+  },
+  "products": [
+    {
+      "id": "A520711852230",
+      "name": "雅漾舒护活泉水喷雾 300ml",
+      "identity_match": "exact_product_and_size",
+      "ingredient_list_complete": true,
+      "ingredients": ["AVÈNE THERMAL SPRING WATER", "NITROGEN"],
+      "key_ingredients": ["雅漾活泉水"],
+      "formulated_without": ["香精", "对羟基苯甲酸酯", "酒精", "矿物油"],
+      "sensitive_skin_claim": true,
+      "official_claims": ["舒缓", "柔软肌肤", "帮助舒适敏感肌"],
+      "scope_note": "官方页面是当前版本参考，不用来追溯证明历史配方完全一致。",
+      "sources": ["https://www.aveneusa.com/thermal-spring-water-300ml"]
+    },
+    {
+      "id": "A20332739108",
+      "name": "倩碧卓越润肤凝露（无油）",
+      "identity_match": "product_line_match",
+      "ingredient_list_complete": false,
+      "ingredients": [],
+      "key_ingredients": ["天然保湿因子", "大麦提取物", "向日葵籽饼", "黄瓜果提取物"],
+      "formulated_without": ["香精", "对羟基苯甲酸酯", "邻苯二甲酸酯", "干燥型酒精", "SLS", "SLES"],
+      "sensitive_skin_claim": true,
+      "official_claims": ["无油保湿", "帮助平衡油性及混合偏油肤质"],
+      "scope_note": "当前官方产品线参考，未证明历史样本的配方版本完全一致。",
+      "sources": ["https://www.clinique.com/product/1687/5047/skincare/moisturizers/dramatically-differenttm-moisturizing-gel"]
+    },
+    {
+      "id": "A18297865077",
+      "name": "倩碧卓越润肤乳（有油）",
+      "identity_match": "product_line_match",
+      "ingredient_list_complete": false,
+      "ingredients": [],
+      "key_ingredients": ["纯尿素", "纯甘油", "亲脂复合成分"],
+      "formulated_without": ["香精", "对羟基苯甲酸酯", "邻苯二甲酸酯", "干燥型酒精", "SLS", "SLES"],
+      "sensitive_skin_claim": true,
+      "official_claims": ["8 小时保湿", "帮助支持肌肤屏障"],
+      "scope_note": "当前官方产品线参考，未证明历史样本的配方版本完全一致。",
+      "sources": ["https://www.clinique.com/product/1687/26651/skincare/moisturizers/dramatically-different-moisturizing-lotiontm"]
+    },
+    {
+      "id": "A15486609514",
+      "name": "悦诗风吟控油矿物质散粉 5g",
+      "identity_match": "exact_product_and_size",
+      "ingredient_list_complete": true,
+      "ingredients": ["Silica", "Aluminum Starch Octenylsuccinate", "Dimethicone/Vinyl Dimethicone Crosspolymer", "Caprylic/Capric Triglyceride", "Mica", "Methicone", "Ethylhexylglycerin", "Dimethicone", "Glyceryl Caprylate", "Mineral Salts", "Tocopherol"],
+      "key_ingredients": ["济州矿物成分"],
+      "formulated_without": ["香精", "矿物油", "对羟基苯甲酸酯", "邻苯二甲酸酯", "SLS", "SLES", "硫酸盐", "滑石粉"],
+      "sensitive_skin_claim": null,
+      "official_claims": ["吸收多余皮脂", "减少油光", "定妆与补妆", "适合所有肤质"],
+      "scope_note": "当前官方页面同时展示多个剂型；本条只使用 Regular/Jumbo 散粉成分，官方并未作出敏感肌专属声称。",
+      "sources": ["https://us.innisfree.com/products/no-sebum-matte-mineral-setting-powder"]
+    }
+  ]
+}
